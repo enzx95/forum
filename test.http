@@ -1,0 +1,26 @@
+### Sign Up request
+POST http://localhost:8080/signup
+
+{
+  "username": "johndoe",
+  "password": "mysecurepassword",
+  "email": "dz@gmail.com"
+}
+
+### Signin request with correct password
+
+POST http://localhost:8000/signin
+
+{
+  "username": "johndoe",
+  "password": "mysecurepassword"
+}
+
+### Signin request with incorrect password
+
+POST http://localhost:8000/signin
+
+{
+  "username": "johndoe",
+  "password": "incorrect"
+}
