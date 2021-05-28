@@ -2,25 +2,25 @@
 POST http://localhost:8080/signup
 
 {
-  "username": "johndoe",
-  "password": "mysecurepassword",
-  "email": "dz@gmail.com"
+  "username": "Josh",
+  "password": "pass",
+  "email": "narchos@gmail.com"
 }
 
 ### Signin request with correct password
 
-POST http://localhost:8000/signin
+POST http://localhost:8080/signin
 
 {
-  "username": "johndoe",
-  "password": "mysecurepassword"
+  "username": "Josh",
+  "password": "pass"
 }
 
 ### Signin request with incorrect password
 
-POST http://localhost:8000/signin
+POST http://localhost:8080/signin
 
 {
-  "username": "johndoe",
+  "username": "Narcos",
   "password": "incorrect"
 }

@@ -3,7 +3,6 @@ package main
 import (
 	"database/sql"
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 	"strings"
@@ -77,20 +76,6 @@ func errorHandler(w http.ResponseWriter, r *http.Request, status int) {
 	}
 }
 
-func httpstatuscode() {
-	resp, err := http.Get("http://localhost:8080/") //Generate the status code of the response which is returned
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Println("HTTP Response Status:", resp.StatusCode, http.StatusText(resp.StatusCode))
-
-	if resp.StatusCode >= 200 && resp.StatusCode <= 299 { //if the status code is between 200 and 300 the response is succesful
-		fmt.Println("HTTP Status is in the 2xx range")
-	} else {
-		fmt.Println("Argh! Broken")
-	}
-}
-
 func checkError(err error) {
 	if err != nil {
 		panic(err)
@@ -108,11 +93,6 @@ func addUser(db *sql.DB, username string, email string, password string) {
 func HashPassword(password string) (string, error) {
 	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 8)
 	return string(bytes), err
-}
-
-func CheckPasswordHash(password, hash string) bool {
-	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
-	return err == nil
 }
 
 func initDB() *sql.DB {
@@ -146,37 +126,28 @@ func Signup(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Email is missing"))
 		return
 	}
-	//fmt.Print(creds)
-	addUser(db, creds.Username, creds.Email, creds.Password) // added data to database
-	// We reach this point if the credentials we correctly stored in the database, and the default status of 200 is sent back
-	w.Write([]byte("Successfully signed up"))
-	log.Printf("User: %s has signed up", creds.Username)
-}
+	resultUser := db.QueryRow("select username from users where username=$1", creds.Username)
+	resultEmail := db.QueryRow("select email from users where email=$1", creds.Email)
+	storedCreds := &Credentials{}
+	// Store the obtained password in `storedCreds`
+	err = resultUser.Scan(&storedCreds.Username)
+	if err == nil {
 
-func Signin(w http.ResponseWriter, r *http.Request) {
-	// Parse and decode the request body into a new `Credentials` instance
-	creds := &Credentials{}
-	err := json.NewDecoder(r.Body).Decode(creds)
-	if err != nil {
-		// If there is something wrong with the request body, return a 400 status
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-	// Get the existing entry present in the database for the given username
-	result := db.QueryRow("select password from users where username=$1", creds.Username)
-	if err != nil {
-		// If there is an issue with the database, return a 500 error
+		if err != sql.ErrNoRows {
+			w.WriteHeader(http.StatusUnauthorized)
+			w.Write([]byte("Username already taken"))
+			return
+		}
+		// If the error is of any other type, send a 500 status
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	// We create another instance of `Credentials` to store the credentials we get from the database
-	storedCreds := &Credentials{}
-	// Store the obtained password in `storedCreds`
-	err = result.Scan(&storedCreds.Password)
-	if err != nil {
-		// If an entry with the username does not exist, send an "Unauthorized"(401) status
-		if err == sql.ErrNoRows {
+	err = resultEmail.Scan(&storedCreds.Email)
+	if err == nil {
+
+		if err != sql.ErrNoRows {
 			w.WriteHeader(http.StatusUnauthorized)
+			w.Write([]byte("Email already taken"))
 			return
 		}
 		// If the error is of any other type, send a 500 status
@@ -184,14 +155,58 @@ func Signin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Compare the stored hashed password, with the hashed version of the password that was received
+	addUser(db, creds.Username, creds.Email, creds.Password) // added data to database
+
+	// We reach this point if the credentials we correctly stored in the database/ 200 status code
+
+	w.Write([]byte("Successfully signed up"))
+	log.Printf("User: %s has signed up", creds.Username)
+
+}
+
+func Signin(w http.ResponseWriter, r *http.Request) {
+	// Parse and decode the request body into a new `Credentials` instance
+	creds := &Credentials{}
+	err := json.NewDecoder(r.Body).Decode(creds)
+	if err != nil {
+
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	result := db.QueryRow("select password from users where username=$1", creds.Username)
+	if err != nil {
+
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	storedCreds := &Credentials{}
+
+	err = result.Scan(&storedCreds.Password)
+	if err != nil {
+		// If an entry with the username does not exist, send an "Unauthorized"(401) status
+		if err == sql.ErrNoRows {
+			w.WriteHeader(http.StatusUnauthorized)
+			w.Write([]byte("User not found"))
+			return
+		}
+		// If the error is of any other type, send a 500 status
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	// Compare the password with the hashed one
 	if err = bcrypt.CompareHashAndPassword([]byte(storedCreds.Password), []byte(creds.Password)); err != nil {
 		// If the two passwords don't match, return a 401 status
 		w.WriteHeader(http.StatusUnauthorized)
+		w.Write([]byte("Wrong password"))
+		return
 	}
 
-	// If we reach this point, that means the users password was correct, and that they are authorized
-	// The default 200 status is sent
+	// If we reach this point, that means the users password was correct / 200 status code
+
+	w.Write([]byte("Successfully signed in"))
 }
 func main() {
 	fs := http.FileServer(http.Dir("assets"))
@@ -203,6 +218,5 @@ func main() {
 	http.HandleFunc("/signin", Signin)
 	http.HandleFunc("/signup", Signup)
 
-	//addUser(db, "Narcos", "jojol@gmail.com", "password1233") // added data to database
 	http.ListenAndServe(":8080", nil)
 }
