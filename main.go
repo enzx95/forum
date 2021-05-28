@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"strings"
@@ -60,7 +61,23 @@ func registerPageHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 }
+func loginPageHandler(w http.ResponseWriter, r *http.Request) {
 
+	//true or false to print the data gathered
+
+	tmpl, err := template.New("login.gtpl").Funcs(template.FuncMap{"join": join, "replace": replace}).ParseFiles("login.gtpl")
+
+	if err != nil {
+		log.Fatal(err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+
+	if err := tmpl.Execute(w, "ok"); err != nil {
+		log.Fatal(err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+
+}
 func errorHandler(w http.ResponseWriter, r *http.Request, status int) {
 	w.WriteHeader(status)
 	if status == http.StatusNotFound {
@@ -165,54 +182,68 @@ func Signup(w http.ResponseWriter, r *http.Request) {
 }
 
 func Signin(w http.ResponseWriter, r *http.Request) {
+
 	// Parse and decode the request body into a new `Credentials` instance
 	creds := &Credentials{}
-	err := json.NewDecoder(r.Body).Decode(creds)
-	if err != nil {
+	if r.Method == "GET" {
+		t, _ := template.ParseFiles("login.gtpl")
+		t.Execute(w, nil)
+	} else {
+		r.ParseForm()
+		creds.Username = r.FormValue("username")
+		creds.Password = r.FormValue("password")
+		// err := json.NewDecoder(r.Body).Decode(creds)
+		// if err != nil {
 
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
+		// 	w.WriteHeader(http.StatusBadRequest)
+		// 	return
+		// }
 
-	result := db.QueryRow("select password from users where username=$1", creds.Username)
-	if err != nil {
+		result := db.QueryRow("select password from users where username=$1", creds.Username)
+		// if err != nil {
 
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
+		// 	w.WriteHeader(http.StatusInternalServerError)
+		// 	return
+		// }
 
-	storedCreds := &Credentials{}
+		storedCreds := &Credentials{}
 
-	err = result.Scan(&storedCreds.Password)
-	if err != nil {
-		// If an entry with the username does not exist, send an "Unauthorized"(401) status
-		if err == sql.ErrNoRows {
-			w.WriteHeader(http.StatusUnauthorized)
-			w.Write([]byte("User not found"))
+		err := result.Scan(&storedCreds.Password)
+		if err != nil {
+			// If an entry with the username does not exist, send an "Unauthorized"(401) status
+			if err == sql.ErrNoRows {
+				w.WriteHeader(http.StatusUnauthorized)
+				w.Write([]byte("User not found"))
+				fmt.Println("User not found")
+				return
+			}
+			// If the error is of any other type, send a 500 status
+			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
-		// If the error is of any other type, send a 500 status
-		w.WriteHeader(http.StatusInternalServerError)
-		return
+
+		// Compare the password with the hashed one
+		if err = bcrypt.CompareHashAndPassword([]byte(storedCreds.Password), []byte(creds.Password)); err != nil {
+			// If the two passwords don't match, return a 401 status
+			w.WriteHeader(http.StatusUnauthorized)
+			w.Write([]byte("Wrong password"))
+			fmt.Println("Wrong pass")
+			return
+		}
+
+		// If we reach this point, that means the users password was correct / 200 status code
+
+		w.Write([]byte("Successfully signed in"))
+		fmt.Println("logged")
 	}
-
-	// Compare the password with the hashed one
-	if err = bcrypt.CompareHashAndPassword([]byte(storedCreds.Password), []byte(creds.Password)); err != nil {
-		// If the two passwords don't match, return a 401 status
-		w.WriteHeader(http.StatusUnauthorized)
-		w.Write([]byte("Wrong password"))
-		return
-	}
-
-	// If we reach this point, that means the users password was correct / 200 status code
-
-	w.Write([]byte("Successfully signed in"))
 }
+
 func main() {
 	fs := http.FileServer(http.Dir("assets"))
 	http.Handle("/assets/", http.StripPrefix("/assets/", fs))
 	http.HandleFunc("/", mainPageHandler)
 	http.HandleFunc("/register/", registerPageHandler)
+	http.HandleFunc("/login/", loginPageHandler)
 
 	db = initDB()
 	http.HandleFunc("/signin", Signin)
