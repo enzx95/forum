@@ -98,7 +98,7 @@ func checkError(err error) {
 }
 
 func addUser(db *sql.DB, username string, email string, password string) {
-	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte(password), 8)
+	hashedPassword, _ := HashPassword(password)
 	tx, _ := db.Begin()
 	stmt, _ := tx.Prepare("insert into users (username,email,password) values (?,?,?)")
 	_, err := stmt.Exec(username, email, hashedPassword)
@@ -106,7 +106,7 @@ func addUser(db *sql.DB, username string, email string, password string) {
 	tx.Commit()
 }
 func HashPassword(password string) (string, error) {
-	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
+	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 8)
 	return string(bytes), err
 }
 
@@ -133,10 +133,24 @@ func Signup(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
+	} else if creds.Username == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("Username is missing"))
+		return
+	} else if creds.Password == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("Password is missing"))
+		return
+	} else if creds.Email == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("Email is missing"))
+		return
 	}
 	//fmt.Print(creds)
 	addUser(db, creds.Username, creds.Email, creds.Password) // added data to database
 	// We reach this point if the credentials we correctly stored in the database, and the default status of 200 is sent back
+	w.Write([]byte("Successfully signed up"))
+	log.Printf("User: %s has signed up", creds.Username)
 }
 
 func Signin(w http.ResponseWriter, r *http.Request) {
