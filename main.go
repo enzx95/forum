@@ -91,9 +91,11 @@ type Credentials struct {
 
 func Signup(w http.ResponseWriter, r *http.Request) {
 	creds := &Credentials{}
+	t, _ := template.ParseFiles("register.html")
+	data := ""
 	if r.Method == "GET" {
-		t, _ := template.ParseFiles("register.html")
-		t.Execute(w, nil)
+
+		t.ExecuteTemplate(w, "register", nil)
 	} else {
 		//err := json.NewDecoder(r.Body).Decode(creds)
 		r.ParseForm()
@@ -107,23 +109,31 @@ func Signup(w http.ResponseWriter, r *http.Request) {
 		// }
 		if creds.Username == "" {
 			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte("Username is missing"))
+			//w.Write([]byte("Username is missing"))
 			fmt.Println("Username is missing")
-			return
-		} else if creds.Password == "" {
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte("Password is missing"))
-			fmt.Println("Password is missing")
+			data = "Username is missing"
+			t.ExecuteTemplate(w, "register", data)
 			return
 		} else if creds.Email == "" {
 			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte("Email is missing"))
+			//w.Write([]byte("Email is missing"))
 			fmt.Println("Email is missing")
+			data = "Email is missing"
+			t.ExecuteTemplate(w, "register", data)
+			return
+		} else if creds.Password == "" {
+			w.WriteHeader(http.StatusBadRequest)
+			//w.Write([]byte("Password is missing"))
+			fmt.Println("Password is missing")
+			data = "Password is missing"
+			t.ExecuteTemplate(w, "register", data)
 			return
 		} else if creds.Password != confpassword {
 			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte("Password does not match"))
+			//w.Write([]byte("Password does not match"))
 			fmt.Println("Password does not match")
+			data = "Password does not match"
+			t.ExecuteTemplate(w, "register", data)
 			return
 		}
 		resultUser := db.QueryRow("select username from users where username=$1", creds.Username)
@@ -135,8 +145,10 @@ func Signup(w http.ResponseWriter, r *http.Request) {
 
 			if err != sql.ErrNoRows {
 				w.WriteHeader(http.StatusUnauthorized)
-				w.Write([]byte("Username already taken"))
+				//w.Write([]byte("Username already taken"))
 				fmt.Println("Username already taken")
+				data = "Username already taken"
+				t.ExecuteTemplate(w, "register", data)
 				return
 			}
 			// If the error is of any other type, send a 500 status
@@ -148,8 +160,10 @@ func Signup(w http.ResponseWriter, r *http.Request) {
 
 			if err != sql.ErrNoRows {
 				w.WriteHeader(http.StatusUnauthorized)
-				w.Write([]byte("Email already taken"))
+				//w.Write([]byte("Email already taken"))
 				fmt.Println("Email already taken")
+				data = "Email already taken"
+				t.ExecuteTemplate(w, "register", data)
 				return
 			}
 			// If the error is of any other type, send a 500 status
@@ -171,9 +185,10 @@ func Signin(w http.ResponseWriter, r *http.Request) {
 
 	// Parse and decode the request body into a new `Credentials` instance
 	creds := &Credentials{}
+	data := ""
+	t, _ := template.ParseFiles("login.html")
 	if r.Method == "GET" {
-		t, _ := template.ParseFiles("login.html")
-		t.Execute(w, nil)
+		t.ExecuteTemplate(w, "login", nil)
 	} else {
 		r.ParseForm()
 		creds.Email = r.FormValue("email")
@@ -200,8 +215,10 @@ func Signin(w http.ResponseWriter, r *http.Request) {
 			// If an entry with the username does not exist, send an "Unauthorized"(401) status
 			if err == sql.ErrNoRows {
 				w.WriteHeader(http.StatusUnauthorized)
-				w.Write([]byte("Email not found"))
+				//w.Write([]byte("Email not found"))
 				fmt.Println("Email not found")
+				data = "Email not found"
+				t.ExecuteTemplate(w, "login", data)
 				return
 			}
 			// If the error is of any other type, send a 500 status
@@ -213,8 +230,10 @@ func Signin(w http.ResponseWriter, r *http.Request) {
 		if err = bcrypt.CompareHashAndPassword([]byte(storedCreds.Password), []byte(creds.Password)); err != nil {
 			// If the two passwords don't match, return a 401 status
 			w.WriteHeader(http.StatusUnauthorized)
-			w.Write([]byte("Wrong password"))
+			//w.Write([]byte("Wrong password"))
 			fmt.Println("Wrong password")
+			data = "Wrong password"
+			t.ExecuteTemplate(w, "login", data)
 			return
 		}
 
