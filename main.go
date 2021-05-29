@@ -2,7 +2,6 @@ package main
 
 import (
 	"database/sql"
-	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -44,40 +43,6 @@ func mainPageHandler(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func registerPageHandler(w http.ResponseWriter, r *http.Request) {
-
-	//true or false to print the data gathered
-
-	tmpl, err := template.New("register.html").Funcs(template.FuncMap{"join": join, "replace": replace}).ParseFiles("./assets/pages/register.html")
-
-	if err != nil {
-		log.Fatal(err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
-
-	if err := tmpl.Execute(w, "ok"); err != nil {
-		log.Fatal(err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
-
-}
-func loginPageHandler(w http.ResponseWriter, r *http.Request) {
-
-	//true or false to print the data gathered
-
-	tmpl, err := template.New("login.gtpl").Funcs(template.FuncMap{"join": join, "replace": replace}).ParseFiles("login.gtpl")
-
-	if err != nil {
-		log.Fatal(err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
-
-	if err := tmpl.Execute(w, "ok"); err != nil {
-		log.Fatal(err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
-
-}
 func errorHandler(w http.ResponseWriter, r *http.Request, status int) {
 	w.WriteHeader(status)
 	if status == http.StatusNotFound {
@@ -126,59 +91,80 @@ type Credentials struct {
 
 func Signup(w http.ResponseWriter, r *http.Request) {
 	creds := &Credentials{}
-	err := json.NewDecoder(r.Body).Decode(creds)
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	} else if creds.Username == "" {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("Username is missing"))
-		return
-	} else if creds.Password == "" {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("Password is missing"))
-		return
-	} else if creds.Email == "" {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("Email is missing"))
-		return
-	}
-	resultUser := db.QueryRow("select username from users where username=$1", creds.Username)
-	resultEmail := db.QueryRow("select email from users where email=$1", creds.Email)
-	storedCreds := &Credentials{}
-	// Store the obtained password in `storedCreds`
-	err = resultUser.Scan(&storedCreds.Username)
-	if err == nil {
-
-		if err != sql.ErrNoRows {
-			w.WriteHeader(http.StatusUnauthorized)
-			w.Write([]byte("Username already taken"))
+	if r.Method == "GET" {
+		t, _ := template.ParseFiles("register.html")
+		t.Execute(w, nil)
+	} else {
+		//err := json.NewDecoder(r.Body).Decode(creds)
+		r.ParseForm()
+		creds.Username = r.FormValue("username")
+		creds.Password = r.FormValue("password")
+		creds.Email = r.FormValue("email")
+		confpassword := r.FormValue("confpassword")
+		// if err != nil {
+		// 	w.WriteHeader(http.StatusBadRequest)
+		// 	return
+		// }
+		if creds.Username == "" {
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte("Username is missing"))
+			fmt.Println("Username is missing")
+			return
+		} else if creds.Password == "" {
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte("Password is missing"))
+			fmt.Println("Password is missing")
+			return
+		} else if creds.Email == "" {
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte("Email is missing"))
+			fmt.Println("Email is missing")
+			return
+		} else if creds.Password != confpassword {
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte("Password does not match"))
+			fmt.Println("Password does not match")
 			return
 		}
-		// If the error is of any other type, send a 500 status
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-	err = resultEmail.Scan(&storedCreds.Email)
-	if err == nil {
+		resultUser := db.QueryRow("select username from users where username=$1", creds.Username)
+		resultEmail := db.QueryRow("select email from users where email=$1", creds.Email)
+		storedCreds := &Credentials{}
+		// Store the obtained password in `storedCreds`
+		err := resultUser.Scan(&storedCreds.Username)
+		if err == nil {
 
-		if err != sql.ErrNoRows {
-			w.WriteHeader(http.StatusUnauthorized)
-			w.Write([]byte("Email already taken"))
+			if err != sql.ErrNoRows {
+				w.WriteHeader(http.StatusUnauthorized)
+				w.Write([]byte("Username already taken"))
+				fmt.Println("Username already taken")
+				return
+			}
+			// If the error is of any other type, send a 500 status
+			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
-		// If the error is of any other type, send a 500 status
-		w.WriteHeader(http.StatusInternalServerError)
-		return
+		err = resultEmail.Scan(&storedCreds.Email)
+		if err == nil {
+
+			if err != sql.ErrNoRows {
+				w.WriteHeader(http.StatusUnauthorized)
+				w.Write([]byte("Email already taken"))
+				fmt.Println("Email already taken")
+				return
+			}
+			// If the error is of any other type, send a 500 status
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		addUser(db, creds.Username, creds.Email, creds.Password) // added data to database
+
+		// We reach this point if the credentials we correctly stored in the database/ 200 status code
+
+		w.Write([]byte("Successfully signed up"))
+		log.Printf("User: %s has signed up\n", creds.Username)
+
 	}
-
-	addUser(db, creds.Username, creds.Email, creds.Password) // added data to database
-
-	// We reach this point if the credentials we correctly stored in the database/ 200 status code
-
-	w.Write([]byte("Successfully signed up"))
-	log.Printf("User: %s has signed up", creds.Username)
-
 }
 
 func Signin(w http.ResponseWriter, r *http.Request) {
@@ -186,11 +172,11 @@ func Signin(w http.ResponseWriter, r *http.Request) {
 	// Parse and decode the request body into a new `Credentials` instance
 	creds := &Credentials{}
 	if r.Method == "GET" {
-		t, _ := template.ParseFiles("login.gtpl")
+		t, _ := template.ParseFiles("login.html")
 		t.Execute(w, nil)
 	} else {
 		r.ParseForm()
-		creds.Username = r.FormValue("username")
+		creds.Email = r.FormValue("email")
 		creds.Password = r.FormValue("password")
 		// err := json.NewDecoder(r.Body).Decode(creds)
 		// if err != nil {
@@ -199,7 +185,8 @@ func Signin(w http.ResponseWriter, r *http.Request) {
 		// 	return
 		// }
 
-		result := db.QueryRow("select password from users where username=$1", creds.Username)
+		result := db.QueryRow("select password from users where email=$1", creds.Email)
+		_ = db.QueryRow("select username from users where email=$1", creds.Email).Scan(&creds.Username)
 		// if err != nil {
 
 		// 	w.WriteHeader(http.StatusInternalServerError)
@@ -213,8 +200,8 @@ func Signin(w http.ResponseWriter, r *http.Request) {
 			// If an entry with the username does not exist, send an "Unauthorized"(401) status
 			if err == sql.ErrNoRows {
 				w.WriteHeader(http.StatusUnauthorized)
-				w.Write([]byte("User not found"))
-				fmt.Println("User not found")
+				w.Write([]byte("Email not found"))
+				fmt.Println("Email not found")
 				return
 			}
 			// If the error is of any other type, send a 500 status
@@ -227,14 +214,14 @@ func Signin(w http.ResponseWriter, r *http.Request) {
 			// If the two passwords don't match, return a 401 status
 			w.WriteHeader(http.StatusUnauthorized)
 			w.Write([]byte("Wrong password"))
-			fmt.Println("Wrong pass")
+			fmt.Println("Wrong password")
 			return
 		}
 
 		// If we reach this point, that means the users password was correct / 200 status code
 
 		w.Write([]byte("Successfully signed in"))
-		fmt.Println("logged")
+		fmt.Printf("%s logged\n", creds.Username)
 	}
 }
 
@@ -242,8 +229,6 @@ func main() {
 	fs := http.FileServer(http.Dir("assets"))
 	http.Handle("/assets/", http.StripPrefix("/assets/", fs))
 	http.HandleFunc("/", mainPageHandler)
-	http.HandleFunc("/register/", registerPageHandler)
-	http.HandleFunc("/login/", loginPageHandler)
 
 	db = initDB()
 	http.HandleFunc("/signin", Signin)
