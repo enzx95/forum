@@ -7,8 +7,11 @@ import (
 	"net/http"
 	"strings"
 	"text/template"
+	"time"
 
 	_ "github.com/mattn/go-sqlite3"
+	_ "github.com/satori/go.uuid"
+	uuid "github.com/satori/go.uuid"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -181,8 +184,11 @@ func Signup(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func Signin(w http.ResponseWriter, r *http.Request) {
-
+func Signin(w http.ResponseWriter, r *http.Request, s *Session) {
+	fmt.Println(AlreadyLoggedIn(r))
+	if AlreadyLoggedIn(r) {
+		http.Redirect(w, r, "/", 302)
+	}
 	// Parse and decode the request body into a new `Credentials` instance
 	creds := &Credentials{}
 	data := ""
@@ -239,9 +245,102 @@ func Signin(w http.ResponseWriter, r *http.Request) {
 
 		// If we reach this point, that means the users password was correct / 200 status code
 
-		w.Write([]byte("Successfully signed in"))
+		//w.Write([]byte("Successfully signed in"))
 		fmt.Printf("%s logged\n", creds.Username)
+		checkSession(creds.Username)
+		s.IsAuthorized = true
+		s.Username = creds.Username
+		http.Redirect(w, r, "/", 302)
+		return
+
 	}
+}
+
+type Session struct {
+	Id           string
+	Username     string
+	IsAuthorized bool
+}
+
+type SessionStore struct {
+	data map[string]*Session
+}
+
+var sessionStore = NewSessionStore()
+
+func NewSessionStore() *SessionStore {
+	s := new(SessionStore)
+	s.data = make(map[string]*Session)
+	return s
+}
+
+func (store *SessionStore) Get(sessionId string) *Session {
+	session := store.data[sessionId]
+	if session == nil {
+		return &Session{Id: sessionId}
+	}
+	return session
+}
+
+func (store *SessionStore) Set(session *Session) {
+	store.data[session.Id] = session
+}
+
+func (store *SessionStore) Delete(session *Session) {
+	delete(store.data, session.Id)
+}
+func Middleware(next func(w http.ResponseWriter, r *http.Request, s *Session)) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		sessionId := ensureCookie(r, w)
+
+		session := sessionStore.Get(sessionId)
+
+		sessionStore.Set(session)
+		next(w, r, session)
+	}
+}
+func ensureCookie(r *http.Request, w http.ResponseWriter) string {
+	cookie, _ := r.Cookie("sessionID")
+	if cookie != nil {
+		if cookie.Expires.Before(time.Now()) {
+			cookie.Expires = time.Now().Add(5 * time.Minute)
+			http.SetCookie(w, cookie)
+
+		}
+		return cookie.Value
+	}
+
+	sessionId := fmt.Sprintf("%x", uuid.NewV4())
+
+	cookie = &http.Cookie{
+		Name:    "sessionID",
+		Value:   sessionId,
+		Expires: time.Now().Add(5 * time.Minute),
+	}
+	http.SetCookie(w, cookie)
+
+	return sessionId
+}
+
+func checkSession(username string) {
+	for k, v := range sessionStore.data {
+		if v.Username == username {
+			delete(sessionStore.data, k)
+		}
+	}
+}
+
+func AlreadyLoggedIn(r *http.Request) bool {
+	c, err := r.Cookie("sessionID")
+	if err != nil {
+		return false
+	}
+	sess, _ := sessionStore.data[c.Value]
+	if sess.Username != "" {
+		return true
+	}
+	return false
 }
 
 func main() {
@@ -250,7 +349,7 @@ func main() {
 	http.HandleFunc("/", mainPageHandler)
 
 	db = initDB()
-	http.HandleFunc("/signin", Signin)
+	http.HandleFunc("/signin", Middleware(Signin))
 	http.HandleFunc("/signup", Signup)
 
 	http.ListenAndServe(":8080", nil)
