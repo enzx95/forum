@@ -87,12 +87,15 @@ func initDB() *sql.DB {
 }
 
 type Credentials struct {
-	Password string `json:"password", db:"password"`
-	Username string `json:"username", db:"username"`
-	Email    string `json:"email", db:"email"`
+	Password string `json:"password",db:"password"`
+	Username string `json:"username",db:"username"`
+	Email    string `json:"email",db:"email"`
 }
 
 func Signup(w http.ResponseWriter, r *http.Request) {
+	if AlreadyLoggedIn(r) {
+		http.Redirect(w, r, "/", 302)
+	}
 	creds := &Credentials{}
 	t, _ := template.ParseFiles("register.html")
 	data := ""
