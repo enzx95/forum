@@ -1,17 +1,101 @@
 {{define "login"}}
+{{define "register"}}
 
 <html>
+
+	<!DOCTYPE html>
+	<html>
 	<head>
-	<title></title>
+		<title>Sign in</title>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+	  <link rel="stylesheet" type="text/css" href="style2.css">
+	  <link href="https://fonts.googleapis.com/css?family=Nunito:400,600,700,800&display=swap" rel="stylesheet">
 	</head>
+
 	<body>
+		<div class="cont">
+			<div class="form sign-in">
+			  <h2>Sign In</h2>
+			  <label>
 		<form action="/signin" method="post">
 			Email:<input type="text" name="email">
+		</label>
+		<label>
 			Password:<input type="password" name="password">
+		</label>
+		<div class="submit">
 			<input type="submit" value="Login">
+		</div>
 		</form>
+
+      <!-- <p class="forgot-pass">Forgot Password ?</p> -->
+
+      <div class="social-media">
+        <ul>
+          <li><img src="https://pneusclaude.ch/wp-content/uploads/facebook.png"></li>
+          <li><img src="https://f.hellowork.com/blogdumoderateur/2019/11/twitter-logo.jpg"></li>
+          <li><img src="https://thumbs.dreamstime.com/b/nouveau-logo-d-instagram-128373493.jpg"></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="sub-cont">
+      <div class="img">
+        <div class="img-text m-up">
+          <h2>New here?</h2>
+          <p>Sign up and discover great amount of new opportunities!</p>
+        </div>
+        <div class="img-text m-in">
+          <h2>One of us?</h2>
+          <p>If you already has an account, just sign in. We've missed you!</p>
+        </div>
+        <div class="img-btn">
+          <span class="m-up">Sign Up</span>
+          <span class="m-in">Sign In</span>
+        </div>
+      </div>
 		{{.}}
+		<div class="sub-cont">
+			<div class="img">
+			  <div class="img-text m-up">
+				<h2>New here?</h2>
+				<p>Sign up and discover great amount of new opportunities!</p>
+			  </div>
+			  <div class="img-text m-in">
+				<h2>One of us?</h2>
+				<p>If you already has an account, just sign in. We've missed you!</p>
+			  </div>
+			  <div class="img-btn">
+				<span class="m-up">Sign Up</span>
+				<span class="m-in">Sign In</span>
+			  </div>
+			</div>
+			<div class="form sign-up">
+				<h2>Sign Up</h2>
+				<label>
+				<form action="/signup" method="post">
+					Username:<input type="text" name="username">
+				</label>
+				<label>
+					Email:<input type="text" name="email">
+				</label>
+				<label>
+					Password:<input type="password" name="password">
+				</label>
+				<label>
+					Confirm password:<input type="password" name="confpassword">
+				  
+				</label>
+				<input type="submit" value="Register">
+			  </div>
+			</form>
+			</div>
+		  </div>
+		  <script type="text/javascript" src="script.js"></script>
+        {{.}}
 	</body>
 </html>
 
+{{end}}
 {{end}}
