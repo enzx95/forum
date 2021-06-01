@@ -1,0 +1,18 @@
+{{define "create"}}
+
+
+<html>
+	<head>
+	<title></title>
+	</head>
+	<body>
+		<form action="/create" method="post">
+			Content; <input type="text" name="content">
+			Title:<input type="text" name="title">
+			<input type="submit" value="create">
+		</form>
+		{{.}}
+	</body>
+</html>
+
+{{end}}

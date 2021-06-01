@@ -12,13 +12,17 @@
         <nav>
             <ul class="nav-area">
                 <li><a href="#">Home</a></li>
-                <li><a href="#">About</a></li>
+                <li><a href="/create">Create Post</a></li>
                 <li><a href="#">Contact</a></li>
             </ul>
         </nav>
-        {{.}}
+        {{.Buttons}}
     </header>
+
+    {{template "posts" .Posts}}
+
 </body>
 </html>
 
 {{end}}
+

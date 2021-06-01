@@ -26,19 +26,21 @@ func replace(input, from, to string) string {
 }
 
 func mainPageHandler(w http.ResponseWriter, r *http.Request, s *Session) {
-	t, err := template.New("index").Funcs(template.FuncMap{"join": join}).ParseFiles("index.html")
-	data := ""
+	t, err := template.New("index").Funcs(template.FuncMap{"join": join}).ParseFiles("index.html", "posts.html")
+	data := new(Data)
 	if r.URL.Path != "/" || r.Method != "GET" {
 		errorHandler(w, r, http.StatusNotFound)
 		return
 	}
 
 	if AlreadyLoggedIn(r) {
-		data = `<a href="/signout" class="btn-area">logout</a>`
+		data.Buttons = `<a href="/signout" class="btn-area">logout</a>`
 	} else {
-		data = `<a href="/signin" class="btn-area">login</a>
+		data.Buttons = `<a href="/signin" class="btn-area">login</a>
         		<a href="/signup" class="btn-area">register</a>`
 	}
+
+	data.Posts = GetPosts()
 
 	t.ExecuteTemplate(w, "index", data)
 
@@ -47,12 +49,6 @@ func mainPageHandler(w http.ResponseWriter, r *http.Request, s *Session) {
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
-
-	// if err := tmpl.Execute(w, "ok"); err != nil {
-	// 	log.Fatal(err)
-	// 	http.Error(w, err.Error(), http.StatusInternalServerError)
-	// }
-
 }
 
 func errorHandler(w http.ResponseWriter, r *http.Request, status int) {
@@ -90,8 +86,9 @@ func HashPassword(password string) (string, error) {
 }
 
 func initDB() *sql.DB {
-	db, _ := sql.Open("sqlite3", "users.db")
-	db.Exec("create table if not exists users (username text NOT NULL, email text NOT NULL,password text NOT NULL)")
+	db, _ := sql.Open("sqlite3", "database.db")
+	db.Exec(`create table if not exists users (username text NOT NULL, email text NOT NULL, password text NOT NULL)`)
+	db.Exec(`create table if not exists posts (id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, author text NOT NULL, content text NOT NULL, title text NOT NULL, created text NOT NULL)`)
 	return db
 }
 
@@ -99,6 +96,11 @@ type Credentials struct {
 	Password string `json:"password",db:"password"`
 	Username string `json:"username",db:"username"`
 	Email    string `json:"email",db:"email"`
+}
+
+type Data struct {
+	Buttons string
+	Posts   []Post
 }
 
 func Signup(w http.ResponseWriter, r *http.Request, s *Session) {
@@ -112,7 +114,7 @@ func Signup(w http.ResponseWriter, r *http.Request, s *Session) {
 
 		t.ExecuteTemplate(w, "register", nil)
 	} else {
-		//err := json.NewDecoder(r.Body).Decode(creds)
+		//err := json.NewDecoder(r.Body).Decode(post)
 		r.ParseForm()
 		creds.Username = r.FormValue("username")
 		creds.Password = r.FormValue("password")
@@ -153,9 +155,9 @@ func Signup(w http.ResponseWriter, r *http.Request, s *Session) {
 		}
 		resultUser := db.QueryRow("select username from users where username=$1", creds.Username)
 		resultEmail := db.QueryRow("select email from users where email=$1", creds.Email)
-		storedCreds := &Credentials{}
-		// Store the obtained password in `storedCreds`
-		err := resultUser.Scan(&storedCreds.Username)
+		storedpost := &Credentials{}
+		// Store the obtained password in `storedpost`
+		err := resultUser.Scan(&storedpost.Username)
 		if err == nil {
 
 			if err != sql.ErrNoRows {
@@ -170,7 +172,7 @@ func Signup(w http.ResponseWriter, r *http.Request, s *Session) {
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
-		err = resultEmail.Scan(&storedCreds.Email)
+		err = resultEmail.Scan(&storedpost.Email)
 		if err == nil {
 
 			if err != sql.ErrNoRows {
@@ -216,7 +218,7 @@ func Signin(w http.ResponseWriter, r *http.Request, s *Session) {
 		r.ParseForm()
 		creds.Email = r.FormValue("email")
 		creds.Password = r.FormValue("password")
-		// err := json.NewDecoder(r.Body).Decode(creds)
+		// err := json.NewDecoder(r.Body).Decode(post)
 		// if err != nil {
 
 		// 	w.WriteHeader(http.StatusBadRequest)
@@ -231,9 +233,9 @@ func Signin(w http.ResponseWriter, r *http.Request, s *Session) {
 		// 	return
 		// }
 
-		storedCreds := &Credentials{}
+		storedpost := &Credentials{}
 
-		err := result.Scan(&storedCreds.Password)
+		err := result.Scan(&storedpost.Password)
 		if err != nil {
 			// If an entry with the username does not exist, send an "Unauthorized"(401) status
 			if err == sql.ErrNoRows {
@@ -250,7 +252,7 @@ func Signin(w http.ResponseWriter, r *http.Request, s *Session) {
 		}
 
 		// Compare the password with the hashed one
-		if err = bcrypt.CompareHashAndPassword([]byte(storedCreds.Password), []byte(creds.Password)); err != nil {
+		if err = bcrypt.CompareHashAndPassword([]byte(storedpost.Password), []byte(creds.Password)); err != nil {
 			// If the two passwords don't match, return a 401 status
 			w.WriteHeader(http.StatusUnauthorized)
 			//w.Write([]byte("Wrong password"))
@@ -365,6 +367,101 @@ func AlreadyLoggedIn(r *http.Request) bool {
 	return false
 }
 
+type Post struct {
+	Id      int
+	Author  string
+	Content string
+	Title   string
+	Created string
+}
+
+func addPost(db *sql.DB, author string, content string, title string) {
+	created := getNowTime()
+	tx, _ := db.Begin()
+	stmt, _ := tx.Prepare("insert into posts (author,content,title,created) values (?,?,?,?)")
+	_, err := stmt.Exec(author, content, title, created)
+	checkError(err)
+	tx.Commit()
+}
+func CreatePost(w http.ResponseWriter, r *http.Request, s *Session) {
+	if s.Username == "" {
+		http.Redirect(w, r, "/", 302)
+	}
+	post := &Post{}
+	t, _ := template.ParseFiles("createpost.html")
+	data := ""
+	if r.Method == "GET" {
+
+		t.ExecuteTemplate(w, "create", nil)
+	} else {
+
+		r.ParseForm()
+		post.Content = r.FormValue("content")
+		post.Title = r.FormValue("title")
+
+		post.Author = s.Username
+
+		if post.Content == "" {
+			w.WriteHeader(http.StatusBadRequest)
+			//w.Write([]byte("Email is missing"))
+			fmt.Println("Content is missing")
+			data = "Content is missing"
+			t.ExecuteTemplate(w, "create", data)
+			return
+		} else if post.Title == "" {
+			w.WriteHeader(http.StatusBadRequest)
+			//w.Write([]byte("Password is missing"))
+			fmt.Println("Title is missing")
+			data = "Title is missing"
+			t.ExecuteTemplate(w, "create", data)
+			return
+		}
+
+		addPost(db, post.Author, post.Content, post.Title)
+		data = "Post sent"
+		t.ExecuteTemplate(w, "create", data)
+		fmt.Println("posted")
+		// http.Redirect(w, r, "/", 302)
+		return
+	}
+}
+
+func selectAllFromTables(db *sql.DB, table string) *sql.Rows {
+	query := "SELECT * FROM " + table
+	result, _ := db.Query(query)
+	return result
+
+}
+
+func GetPosts() []Post {
+	posts := []Post{}
+	rows := selectAllFromTables(db, "posts")
+	var id int
+	var author string
+	var content string
+	var title string
+	var created string
+	for rows.Next() {
+		rows.Scan(&id, &author, &title, &content, &created)
+		post := Post{
+			Id:      id,
+			Author:  author,
+			Title:   title,
+			Content: content,
+			Created: created,
+		}
+		posts = append(posts, post)
+	}
+	rows.Close()
+	fmt.Println(posts)
+	return posts
+}
+
+func getNowTime() string {
+	dt := time.Now().Format("01-02-2006 15:04:05")
+	return dt
+}
+
 func main() {
 	fs := http.FileServer(http.Dir("assets"))
 	http.Handle("/assets/", http.StripPrefix("/assets/", fs))
@@ -374,6 +471,6 @@ func main() {
 	http.HandleFunc("/signin", Middleware(Signin))
 	http.HandleFunc("/signup", Middleware(Signup))
 	http.HandleFunc("/signout", Middleware(Signout))
-
+	http.HandleFunc("/create", Middleware(CreatePost))
 	http.ListenAndServe(":8080", nil)
 }

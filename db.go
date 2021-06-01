@@ -60,12 +60,13 @@ func insertSpecies(db *sql.DB, name string, type_id int) (int64, error) {
 	return result.LastInsertId()
 }
 
-func selectAllFromTables(db *sql.DB, table string) *sql.Rows {
-	query := "SELECT * FROM " + table
-	result, _ := db.Query(query)
-	return result
+// func selectAllFromTables(db *sql.DB, table string) *sql.Rows {
+// 	query := "SELECT * FROM " + table
+// 	result, _ := db.Query(query)
+// 	return result
 
-}
+// }
+
 func selectTypesById(db *sql.DB, id int) Type {
 	var t Type
 	db.QueryRow(`SELECT * FROM types WHERE id = ?`, id).Scan(&t.Id, &t.Name)
