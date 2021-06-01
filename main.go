@@ -10,7 +10,6 @@ import (
 	"time"
 
 	_ "github.com/mattn/go-sqlite3"
-	_ "github.com/satori/go.uuid"
 	uuid "github.com/satori/go.uuid"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -26,23 +25,33 @@ func replace(input, from, to string) string {
 	return strings.Replace(input, from, to, -1)
 }
 
-func mainPageHandler(w http.ResponseWriter, r *http.Request) {
-
+func mainPageHandler(w http.ResponseWriter, r *http.Request, s *Session) {
+	t, err := template.New("index").Funcs(template.FuncMap{"join": join}).ParseFiles("index.html")
+	data := ""
 	if r.URL.Path != "/" || r.Method != "GET" {
 		errorHandler(w, r, http.StatusNotFound)
 		return
 	}
 
-	tmpl, err := template.New("index.html").Funcs(template.FuncMap{"join": join}).ParseFiles("index.html")
+	if AlreadyLoggedIn(r) {
+		data = `<a href="/signout" class="btn-area">logout</a>`
+	} else {
+		data = `<a href="/signin" class="btn-area">login</a>
+        		<a href="/signup" class="btn-area">register</a>`
+	}
+
+	t.ExecuteTemplate(w, "index", data)
+
+	//<a href="/signin" class="btn-area">login</a>
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 
-	if err := tmpl.Execute(w, "ok"); err != nil {
-		log.Fatal(err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
+	// if err := tmpl.Execute(w, "ok"); err != nil {
+	// 	log.Fatal(err)
+	// 	http.Error(w, err.Error(), http.StatusInternalServerError)
+	// }
 
 }
 
@@ -92,7 +101,7 @@ type Credentials struct {
 	Email    string `json:"email",db:"email"`
 }
 
-func Signup(w http.ResponseWriter, r *http.Request) {
+func Signup(w http.ResponseWriter, r *http.Request, s *Session) {
 	if AlreadyLoggedIn(r) {
 		http.Redirect(w, r, "/", 302)
 	}
@@ -181,8 +190,13 @@ func Signup(w http.ResponseWriter, r *http.Request) {
 
 		// We reach this point if the credentials we correctly stored in the database/ 200 status code
 
-		w.Write([]byte("Successfully signed up"))
+		//w.Write([]byte("Successfully signed up"))
 		log.Printf("User: %s has signed up\n", creds.Username)
+		checkSession(creds.Username)
+		s.IsAuthorized = true
+		s.Username = creds.Username
+		http.Redirect(w, r, "/", 302)
+		return
 
 	}
 }
@@ -257,6 +271,11 @@ func Signin(w http.ResponseWriter, r *http.Request, s *Session) {
 		return
 
 	}
+}
+
+func Signout(w http.ResponseWriter, r *http.Request, s *Session) {
+	sessionStore.Delete(s)
+	http.Redirect(w, r, "/", 302)
 }
 
 type Session struct {
@@ -349,11 +368,12 @@ func AlreadyLoggedIn(r *http.Request) bool {
 func main() {
 	fs := http.FileServer(http.Dir("assets"))
 	http.Handle("/assets/", http.StripPrefix("/assets/", fs))
-	http.HandleFunc("/", mainPageHandler)
+	http.HandleFunc("/", Middleware(mainPageHandler))
 
 	db = initDB()
 	http.HandleFunc("/signin", Middleware(Signin))
-	http.HandleFunc("/signup", Signup)
+	http.HandleFunc("/signup", Middleware(Signup))
+	http.HandleFunc("/signout", Middleware(Signout))
 
 	http.ListenAndServe(":8080", nil)
 }
