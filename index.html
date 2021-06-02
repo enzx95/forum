@@ -4,20 +4,24 @@
 <head>
     <meta charset="UTF-8">
     <title>PROJET-FORUM</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="/assets/css/style.css">
 </head>
 <body>
-    <header>
-        <img src="" alt="" class="logo">
+    <div class="navbar">
+        <img class="logo" src="/assets/img/LOGO_YNOV.png">
         <nav>
-            <ul class="nav-area">
-                <li><a href="#">Home</a></li>
-                <li><a href="/create">Create Post</a></li>
-                <li><a href="#">Contact</a></li>
+            <ul class="links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="/assets/pages/login.html">Sign in</a></li>
             </ul>
         </nav>
+        <a class="contact" href="#"><button>Contact</button></a>
         {{.Buttons}}
-    </header>
+    </div>
+
+    <div class="post">
+        <a class="create_post" href="/assets/pages/createpost.html"><h3>New post +</h3></a>
+    </div>
 
     {{template "posts" .}}
 
