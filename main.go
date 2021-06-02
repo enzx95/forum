@@ -25,8 +25,12 @@ func replace(input, from, to string) string {
 	return strings.Replace(input, from, to, -1)
 }
 
+func add(i int) int {
+	return i + 1
+}
+
 func mainPageHandler(w http.ResponseWriter, r *http.Request, s *Session) {
-	t, err := template.New("index").Funcs(template.FuncMap{"join": join}).ParseFiles("index.html", "posts.html")
+	t, err := template.New("index").Funcs(template.FuncMap{"join": join, "add": add}).ParseFiles("index.html", "posts.html")
 	data := new(Data)
 	if r.URL.Path != "/" || r.Method != "GET" {
 		errorHandler(w, r, http.StatusNotFound)
@@ -41,6 +45,7 @@ func mainPageHandler(w http.ResponseWriter, r *http.Request, s *Session) {
 	}
 
 	data.Posts = GetPosts()
+	data.Likes = GetLikes()
 
 	t.ExecuteTemplate(w, "index", data)
 
@@ -88,15 +93,9 @@ func HashPassword(password string) (string, error) {
 func initDB() *sql.DB {
 	db, _ := sql.Open("sqlite3", "database.db")
 	db.Exec(`create table if not exists users (username text NOT NULL, email text NOT NULL, password text NOT NULL)`)
-	db.Exec(`create table if not exists likes (Author text NOT NULL, Numposte text NOT NULL, Date text NOT NULL`)
+	db.Exec(`create table if not exists likes (author text NOT NULL, numpost text NOT NULL, date text NOT NULL)`)
 	db.Exec(`create table if not exists posts (id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, author text NOT NULL, content text NOT NULL, title text NOT NULL, created text NOT NULL)`)
 	return db
-}
-
-type Likes struct {
-	Author   string
-	Numposte int
-	Date     string
 }
 
 type Credentials struct {
@@ -108,6 +107,7 @@ type Credentials struct {
 type Data struct {
 	Buttons string
 	Posts   []Post
+	Likes   []Likes
 }
 
 func Signup(w http.ResponseWriter, r *http.Request, s *Session) {
@@ -382,13 +382,30 @@ type Post struct {
 	Created string
 }
 
-func addLike(db *sql.DB, Author string, Numposte int) {
-	created := getNowTime()
-	tx, _ := db.Begin()
-	stmt, _ := tx.Prepare("insert into posts (Author,Numposte,Date) values (?,?,?)")
-	_, err := stmt.Exec(Author, Numposte, created)
-	checkError(err)
-	tx.Commit()
+type Likes struct {
+	Author  string
+	Numpost int
+	Date    string
+}
+
+func addLike(w http.ResponseWriter, r *http.Request, s *Session) {
+	if s.Username == "" {
+		return
+	}
+	if r.Method == "GET" {
+		http.Redirect(w, r, "/", 302)
+	} else {
+		id := r.URL.Path[len("/like/"):]
+		author := s.Username
+		created := getNowTime()
+		tx, _ := db.Begin()
+		stmt, _ := tx.Prepare("insert into likes (author,numpost,date) values (?,?,?)")
+		_, err := stmt.Exec(author, id, created)
+		checkError(err)
+		tx.Commit()
+		fmt.Println("liked")
+		http.Redirect(w, r, "/", 302)
+	}
 }
 
 func addPost(db *sql.DB, author string, content string, title string) {
@@ -473,6 +490,26 @@ func GetPosts() []Post {
 	return posts
 }
 
+func GetLikes() []Likes {
+	likes := []Likes{}
+	rows := selectAllFromTables(db, "likes")
+	var numpost int
+	var author string
+	var date string
+	for rows.Next() {
+		rows.Scan(&author, &numpost, &date)
+		like := Likes{
+			Author:  author,
+			Numpost: numpost,
+			Date:    date,
+		}
+		likes = append(likes, like)
+	}
+	rows.Close()
+	fmt.Println(likes)
+	return likes
+}
+
 func getNowTime() string {
 	dt := time.Now().Format("01-02-2006 15:04:05")
 	return dt
@@ -488,5 +525,6 @@ func main() {
 	http.HandleFunc("/signup", Middleware(Signup))
 	http.HandleFunc("/signout", Middleware(Signout))
 	http.HandleFunc("/create", Middleware(CreatePost))
+	http.HandleFunc("/like/", Middleware(addLike))
 	http.ListenAndServe(":8080", nil)
 }
