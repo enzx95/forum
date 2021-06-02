@@ -88,8 +88,15 @@ func HashPassword(password string) (string, error) {
 func initDB() *sql.DB {
 	db, _ := sql.Open("sqlite3", "database.db")
 	db.Exec(`create table if not exists users (username text NOT NULL, email text NOT NULL, password text NOT NULL)`)
+	db.Exec(`create table if not exists likes (Author text NOT NULL, Numposte text NOT NULL, Date text NOT NULL`)
 	db.Exec(`create table if not exists posts (id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, author text NOT NULL, content text NOT NULL, title text NOT NULL, created text NOT NULL)`)
 	return db
+}
+
+type Likes struct {
+	Author   string
+	Numposte int
+	Date     string
 }
 
 type Credentials struct {
@@ -373,6 +380,15 @@ type Post struct {
 	Content string
 	Title   string
 	Created string
+}
+
+func addLike(db *sql.DB, Author string, Numposte int) {
+	created := getNowTime()
+	tx, _ := db.Begin()
+	stmt, _ := tx.Prepare("insert into posts (Author,Numposte,Date) values (?,?,?)")
+	_, err := stmt.Exec(Author, Numposte, created)
+	checkError(err)
+	tx.Commit()
 }
 
 func addPost(db *sql.DB, author string, content string, title string) {
