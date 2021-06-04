@@ -37,16 +37,18 @@ func mainPageHandler(w http.ResponseWriter, r *http.Request, s *Session) {
 		return
 	}
 
-	if AlreadyLoggedIn(r) {
-		data.Buttons = `<a href="/signout" class="btn-area">logout</a>`
-	} else {
-		data.Buttons = `<a href="/signin" class="btn-area">login</a>
-        		<a href="/signup" class="btn-area">register</a>`
-	}
+	// if AlreadyLoggedIn(r) {
+	// 	data.Buttons = `<a href="/signout" class="btn-area">logout</a>`
+	// } else {
+	// 	data.Buttons = `<a href="/signin" class="btn-area">login</a>
+	//     		<a href="/signup" class="btn-area">register</a>`
+	// }
 
 	data.Posts = GetPosts()
 	data.Likes = GetLikes()
+	println("-----")
 
+	data.Posts, data.Likes = NumberLikes(data.Likes, data.Posts)
 	t.ExecuteTemplate(w, "index", data)
 
 	//<a href="/signin" class="btn-area">login</a>
@@ -119,7 +121,7 @@ func Signup(w http.ResponseWriter, r *http.Request, s *Session) {
 	data := ""
 	if r.Method == "GET" {
 
-		t.ExecuteTemplate(w, "register", nil)
+		t.ExecuteTemplate(w, "login2", nil)
 	} else {
 		//err := json.NewDecoder(r.Body).Decode(post)
 		r.ParseForm()
@@ -136,28 +138,28 @@ func Signup(w http.ResponseWriter, r *http.Request, s *Session) {
 			//w.Write([]byte("Username is missing"))
 			fmt.Println("Username is missing")
 			data = "Username is missing"
-			t.ExecuteTemplate(w, "register", data)
+			t.ExecuteTemplate(w, "login2", data)
 			return
 		} else if creds.Email == "" {
 			w.WriteHeader(http.StatusBadRequest)
 			//w.Write([]byte("Email is missing"))
 			fmt.Println("Email is missing")
 			data = "Email is missing"
-			t.ExecuteTemplate(w, "register", data)
+			t.ExecuteTemplate(w, "login2", data)
 			return
 		} else if creds.Password == "" {
 			w.WriteHeader(http.StatusBadRequest)
 			//w.Write([]byte("Password is missing"))
 			fmt.Println("Password is missing")
 			data = "Password is missing"
-			t.ExecuteTemplate(w, "register", data)
+			t.ExecuteTemplate(w, "login2", data)
 			return
 		} else if creds.Password != confpassword {
 			w.WriteHeader(http.StatusBadRequest)
 			//w.Write([]byte("Password does not match"))
 			fmt.Println("Password does not match")
 			data = "Password does not match"
-			t.ExecuteTemplate(w, "register", data)
+			t.ExecuteTemplate(w, "login2", data)
 			return
 		}
 		resultUser := db.QueryRow("select username from users where username=$1", creds.Username)
@@ -250,7 +252,7 @@ func Signin(w http.ResponseWriter, r *http.Request, s *Session) {
 				//w.Write([]byte("Email not found"))
 				fmt.Println("Email not found")
 				data = "Email not found"
-				t.ExecuteTemplate(w, "login", data)
+				t.ExecuteTemplate(w, "login2", data)
 				return
 			}
 			// If the error is of any other type, send a 500 status
@@ -265,7 +267,7 @@ func Signin(w http.ResponseWriter, r *http.Request, s *Session) {
 			//w.Write([]byte("Wrong password"))
 			fmt.Println("Wrong password")
 			data = "Wrong password"
-			t.ExecuteTemplate(w, "login", data)
+			t.ExecuteTemplate(w, "login2", data)
 			return
 		}
 
@@ -380,6 +382,7 @@ type Post struct {
 	Content string
 	Title   string
 	Created string
+	Likes   int
 }
 
 type Likes struct {
@@ -390,6 +393,7 @@ type Likes struct {
 
 func addLike(w http.ResponseWriter, r *http.Request, s *Session) {
 	if s.Username == "" {
+		http.Redirect(w, r, "/", 302)
 		return
 	}
 	if r.Method == "GET" {
@@ -405,10 +409,13 @@ func addLike(w http.ResponseWriter, r *http.Request, s *Session) {
 		if err == nil {
 
 			if err != sql.ErrNoRows {
-				//w.WriteHeader(http.StatusUnauthorized)
-				fmt.Println("You already liked.")
-				// data = "Username already taken"
-				// t.ExecuteTemplate(w, "register", data)
+				tx, _ := db.Begin()
+				stmt, _ := tx.Prepare("delete from likes where author=$1 and numpost=$2")
+				_, err = stmt.Exec(author, id)
+				checkError(err)
+				tx.Commit()
+				fmt.Println("liked")
+				http.Redirect(w, r, "/", 302)
 				return
 			}
 			// If the error is of any other type, send a 500 status
@@ -422,44 +429,6 @@ func addLike(w http.ResponseWriter, r *http.Request, s *Session) {
 		tx.Commit()
 		fmt.Println("liked")
 		http.Redirect(w, r, "/", 302)
-	}
-}
-
-func removeLike(w http.ResponseWriter, r *http.Request, s *Session) {
-	if s.Username == "" {
-		return
-	}
-	if r.Method == "GET" {
-		http.Redirect(w, r, "/", 302)
-	} else {
-		id := r.URL.Path[len("/unlike/"):]
-		author := s.Username
-		created := getNowTime()
-		checkLike := db.QueryRow("select author from likes where author=$1 and numpost=$2", author, id)
-		storedlike := &Likes{}
-
-		err := checkLike.Scan(&storedlike.Author)
-		if err == nil {
-
-			if err != sql.ErrNoRows {
-				//w.WriteHeader(http.StatusUnauthorized)
-				fmt.Println("You already liked.")
-				// data = "Username already taken"
-				// t.ExecuteTemplate(w, "register", data)
-				tx, _ := db.Begin()
-				stmt, _ := tx.Prepare("insert into likes (author,numpost,date) values (?,?,?)")
-				_, err = stmt.Exec(author, id, created)
-				checkError(err)
-				tx.Commit()
-				fmt.Println("unliked")
-				http.Redirect(w, r, "/", 302)
-				return
-			}
-			// If the error is of any other type, send a 500 status
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-
 	}
 }
 
@@ -541,8 +510,21 @@ func GetPosts() []Post {
 		posts = append(posts, post)
 	}
 	rows.Close()
-	fmt.Println(posts)
+	//fmt.Println(posts)
 	return posts
+}
+
+func NumberLikes(Likes []Likes, Posts []Post) ([]Post, []Likes) {
+	for i, p := range Posts {
+		numlikes := 0
+		for _, l := range Likes {
+			if l.Numpost == p.Id {
+				numlikes++
+			}
+		}
+		Posts[i].Likes = numlikes
+	}
+	return Posts, Likes
 }
 
 func GetLikes() []Likes {
@@ -561,7 +543,7 @@ func GetLikes() []Likes {
 		likes = append(likes, like)
 	}
 	rows.Close()
-	fmt.Println(likes)
+	//fmt.Println(likes)
 	return likes
 }
 
