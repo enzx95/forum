@@ -37,21 +37,20 @@ func mainPageHandler(w http.ResponseWriter, r *http.Request, s *Session) {
 		return
 	}
 
-	// if AlreadyLoggedIn(r) {
-	// 	data.Buttons = `<a href="/signout" class="btn-area">logout</a>`
-	// } else {
-	// 	data.Buttons = `<a href="/signin" class="btn-area">login</a>
-	//     		<a href="/signup" class="btn-area">register</a>`
-	// }
+	if AlreadyLoggedIn(r) {
+		data.Buttons = `<li><a href="/signout">Sign out</a></li>`
+	} else {
+		data.Buttons = `<li><a href="/signin">Sign in</a></li>
+		<li><a href="/signup">Sign up</a></li>`
+	}
 
 	data.Posts = GetPosts()
 	data.Likes = GetLikes()
-	println("-----")
+	data.Dislikes = GetDislikes()
 
 	data.Posts, data.Likes = NumberLikes(data.Likes, data.Posts)
+	data.Posts, data.Dislikes = NumberDislikes(data.Dislikes, data.Posts)
 	t.ExecuteTemplate(w, "index", data)
-
-	//<a href="/signin" class="btn-area">login</a>
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -96,6 +95,7 @@ func initDB() *sql.DB {
 	db, _ := sql.Open("sqlite3", "database.db")
 	db.Exec(`create table if not exists users (username text NOT NULL, email text NOT NULL, password text NOT NULL)`)
 	db.Exec(`create table if not exists likes (author text NOT NULL, numpost text NOT NULL, date text NOT NULL)`)
+	db.Exec(`create table if not exists dislikes (author text NOT NULL, numpost text NOT NULL, date text NOT NULL)`)
 	db.Exec(`create table if not exists posts (id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, author text NOT NULL, content text NOT NULL, title text NOT NULL, created text NOT NULL)`)
 	return db
 }
@@ -107,9 +107,10 @@ type Credentials struct {
 }
 
 type Data struct {
-	Buttons string
-	Posts   []Post
-	Likes   []Likes
+	Buttons  string
+	Posts    []Post
+	Likes    []Likes
+	Dislikes []Dislikes
 }
 
 func Signup(w http.ResponseWriter, r *http.Request, s *Session) {
@@ -377,15 +378,22 @@ func AlreadyLoggedIn(r *http.Request) bool {
 }
 
 type Post struct {
-	Id      int
-	Author  string
-	Content string
-	Title   string
-	Created string
-	Likes   int
+	Id       int
+	Author   string
+	Content  string
+	Title    string
+	Created  string
+	Likes    int
+	Dislikes int
 }
 
 type Likes struct {
+	Author  string
+	Numpost int
+	Date    string
+}
+
+type Dislikes struct {
 	Author  string
 	Numpost int
 	Date    string
@@ -404,7 +412,6 @@ func addLike(w http.ResponseWriter, r *http.Request, s *Session) {
 		created := getNowTime()
 		checkLike := db.QueryRow("select author from likes where author=$1 and numpost=$2", author, id)
 		storedlike := &Likes{}
-		// Store the obtained password in `storedpost`
 		err := checkLike.Scan(&storedlike.Author)
 		if err == nil {
 
@@ -414,13 +421,27 @@ func addLike(w http.ResponseWriter, r *http.Request, s *Session) {
 				_, err = stmt.Exec(author, id)
 				checkError(err)
 				tx.Commit()
-				fmt.Println("liked")
+				fmt.Println("like removed")
 				http.Redirect(w, r, "/", 302)
 				return
 			}
-			// If the error is of any other type, send a 500 status
 			w.WriteHeader(http.StatusInternalServerError)
 			return
+		}
+		checkDislike := db.QueryRow("select author from dislikes where author=$1 and numpost=$2", author, id)
+		storedDislike := &Dislikes{}
+		err = checkDislike.Scan(&storedDislike.Author)
+		if err == nil {
+
+			if err != sql.ErrNoRows {
+				tx, _ := db.Begin()
+				stmt, _ := tx.Prepare("delete from dislikes where author=$1 and numpost=$2")
+				_, err = stmt.Exec(author, id)
+				checkError(err)
+				tx.Commit()
+				fmt.Println("dislike removed")
+				//http.Redirect(w, r, "/", 302)
+			}
 		}
 		tx, _ := db.Begin()
 		stmt, _ := tx.Prepare("insert into likes (author,numpost,date) values (?,?,?)")
@@ -428,6 +449,60 @@ func addLike(w http.ResponseWriter, r *http.Request, s *Session) {
 		checkError(err)
 		tx.Commit()
 		fmt.Println("liked")
+		http.Redirect(w, r, "/", 302)
+	}
+}
+
+func addDislike(w http.ResponseWriter, r *http.Request, s *Session) {
+	if s.Username == "" {
+		http.Redirect(w, r, "/", 302)
+		return
+	}
+	if r.Method == "GET" {
+		http.Redirect(w, r, "/", 302)
+	} else {
+		id := r.URL.Path[len("/dislike/"):]
+		author := s.Username
+		created := getNowTime()
+		checkDislike := db.QueryRow("select author from dislikes where author=$1 and numpost=$2", author, id)
+		storedDislike := &Dislikes{}
+		err := checkDislike.Scan(&storedDislike.Author)
+		if err == nil {
+
+			if err != sql.ErrNoRows {
+				tx, _ := db.Begin()
+				stmt, _ := tx.Prepare("delete from dislikes where author=$1 and numpost=$2")
+				_, err = stmt.Exec(author, id)
+				checkError(err)
+				tx.Commit()
+				fmt.Println("dislike removed")
+				http.Redirect(w, r, "/", 302)
+				return
+			}
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		checklike := db.QueryRow("select author from likes where author=$1 and numpost=$2", author, id)
+		storedlike := &Likes{}
+		err = checklike.Scan(&storedlike.Author)
+		if err == nil {
+
+			if err != sql.ErrNoRows {
+				tx, _ := db.Begin()
+				stmt, _ := tx.Prepare("delete from likes where author=$1 and numpost=$2")
+				_, err = stmt.Exec(author, id)
+				checkError(err)
+				tx.Commit()
+				fmt.Println("like removed")
+				//http.Redirect(w, r, "/", 302)
+			}
+		}
+		tx, _ := db.Begin()
+		stmt, _ := tx.Prepare("insert into dislikes (author,numpost,date) values (?,?,?)")
+		_, err = stmt.Exec(author, id, created)
+		checkError(err)
+		tx.Commit()
+		fmt.Println("disliked")
 		http.Redirect(w, r, "/", 302)
 	}
 }
@@ -478,7 +553,7 @@ func CreatePost(w http.ResponseWriter, r *http.Request, s *Session) {
 		data = "Post sent"
 		t.ExecuteTemplate(w, "create", data)
 		fmt.Println("posted")
-		// http.Redirect(w, r, "/", 302)
+		http.Redirect(w, r, "/", 302)
 		return
 	}
 }
@@ -527,6 +602,19 @@ func NumberLikes(Likes []Likes, Posts []Post) ([]Post, []Likes) {
 	return Posts, Likes
 }
 
+func NumberDislikes(Dislikes []Dislikes, Posts []Post) ([]Post, []Dislikes) {
+	for i, p := range Posts {
+		numlikes := 0
+		for _, l := range Dislikes {
+			if l.Numpost == p.Id {
+				numlikes++
+			}
+		}
+		Posts[i].Dislikes = numlikes
+	}
+	return Posts, Dislikes
+}
+
 func GetLikes() []Likes {
 	likes := []Likes{}
 	rows := selectAllFromTables(db, "likes")
@@ -543,8 +631,25 @@ func GetLikes() []Likes {
 		likes = append(likes, like)
 	}
 	rows.Close()
-	//fmt.Println(likes)
 	return likes
+}
+func GetDislikes() []Dislikes {
+	dislikes := []Dislikes{}
+	rows := selectAllFromTables(db, "dislikes")
+	var numpost int
+	var author string
+	var date string
+	for rows.Next() {
+		rows.Scan(&author, &numpost, &date)
+		dislike := Dislikes{
+			Author:  author,
+			Numpost: numpost,
+			Date:    date,
+		}
+		dislikes = append(dislikes, dislike)
+	}
+	rows.Close()
+	return dislikes
 }
 
 func getNowTime() string {
@@ -563,5 +668,6 @@ func main() {
 	http.HandleFunc("/signout", Middleware(Signout))
 	http.HandleFunc("/create", Middleware(CreatePost))
 	http.HandleFunc("/like/", Middleware(addLike))
+	http.HandleFunc("/dislike/", Middleware(addDislike))
 	http.ListenAndServe(":8080", nil)
 }
