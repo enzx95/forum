@@ -30,7 +30,7 @@ func add(i int) int {
 }
 
 func mainPageHandler(w http.ResponseWriter, r *http.Request, s *Session) {
-	t, err := template.New("index").Funcs(template.FuncMap{"join": join, "add": add}).ParseFiles("index.html", "posts.html")
+	t, err := template.New("index").Funcs(template.FuncMap{"join": join, "add": add}).ParseFiles("index.html", "./assets/pages/posts.html")
 	data := new(Data)
 	if r.URL.Path != "/" || r.Method != "GET" {
 		errorHandler(w, r, http.StatusNotFound)
@@ -115,7 +115,7 @@ func Signup(w http.ResponseWriter, r *http.Request, s *Session) {
 		http.Redirect(w, r, "/", 302)
 	}
 	creds := &Credentials{}
-	t, _ := template.ParseFiles("register.html")
+	t, _ := template.ParseFiles("./assets/pages/register.html")
 	data := ""
 	if r.Method == "GET" {
 
@@ -218,7 +218,7 @@ func Signin(w http.ResponseWriter, r *http.Request, s *Session) {
 	// Parse and decode the request body into a new `Credentials` instance
 	creds := &Credentials{}
 	data := ""
-	t, _ := template.ParseFiles("login.html")
+	t, _ := template.ParseFiles("./assets/pages/login.html")
 	if r.Method == "GET" {
 		t.ExecuteTemplate(w, "login", nil)
 	} else {
@@ -476,7 +476,7 @@ func CreatePost(w http.ResponseWriter, r *http.Request, s *Session) {
 		http.Redirect(w, r, "/", 302)
 	}
 	post := &Post{}
-	t, _ := template.ParseFiles("createpost.html")
+	t, _ := template.ParseFiles("./assets/pages/createpost.html")
 	data := ""
 	if r.Method == "GET" {
 
