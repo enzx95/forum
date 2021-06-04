@@ -32,15 +32,16 @@ func add(i int) int {
 func mainPageHandler(w http.ResponseWriter, r *http.Request, s *Session) {
 	t, err := template.New("index").Funcs(template.FuncMap{"join": join, "add": add}).ParseFiles("index.html", "./assets/pages/posts.html")
 	data := new(Data)
+
 	if r.URL.Path != "/" || r.Method != "GET" {
 		errorHandler(w, r, http.StatusNotFound)
 		return
 	}
 
 	if AlreadyLoggedIn(r) {
-		data.Buttons = `<li><a href="/signout">Sign out</a></li>`
+		data.Buttons.Auth = `<li><a href="/signout">Sign out</a></li>`
 	} else {
-		data.Buttons = `<li><a href="/signin">Sign in</a></li>
+		data.Buttons.Auth = `<li><a href="/signin">Sign in</a></li>
 		<li><a href="/signup">Sign up</a></li>`
 	}
 
@@ -50,6 +51,10 @@ func mainPageHandler(w http.ResponseWriter, r *http.Request, s *Session) {
 
 	data.Posts, data.Likes = NumberLikes(data.Likes, data.Posts)
 	data.Posts, data.Dislikes = NumberDislikes(data.Dislikes, data.Posts)
+
+	data.Liked = getLiked(data.Likes, data.Posts, s.Username)
+	data.Posted = getPosted(data.Posts, s.Username)
+
 	t.ExecuteTemplate(w, "index", data)
 
 	if err != nil {
@@ -107,10 +112,12 @@ type Credentials struct {
 }
 
 type Data struct {
-	Buttons  string
+	Buttons  Buttons
 	Posts    []Post
 	Likes    []Likes
 	Dislikes []Dislikes
+	Liked    []Post
+	Posted   []Post
 }
 
 func Signup(w http.ResponseWriter, r *http.Request, s *Session) {
@@ -387,6 +394,10 @@ type Post struct {
 	Dislikes int
 }
 
+type Buttons struct {
+	Auth string
+}
+
 type Likes struct {
 	Author  string
 	Numpost int
@@ -655,6 +666,36 @@ func GetDislikes() []Dislikes {
 func getNowTime() string {
 	dt := time.Now().Format("01-02-2006 15:04:05")
 	return dt
+}
+func getLiked(Likes []Likes, Posts []Post, username string) []Post {
+	Liked := []Post{}
+
+	for _, l := range Likes {
+		if l.Author == username {
+			for i, p := range Posts {
+				if p.Id == l.Numpost {
+					Liked = append(Liked, Posts[i])
+				}
+			}
+
+		}
+	}
+
+	fmt.Println("Liked: ", Liked)
+	return Liked
+}
+
+func getPosted(Posts []Post, username string) []Post {
+	posted := []Post{}
+
+	for i, p := range Posts {
+		if p.Author == username {
+			posted = append(posted, Posts[i])
+		}
+	}
+
+	fmt.Println("Posted: ", posted)
+	return posted
 }
 
 func main() {
