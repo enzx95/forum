@@ -30,7 +30,7 @@ func add(i int) int {
 }
 
 func mainPageHandler(w http.ResponseWriter, r *http.Request, s *Session) {
-	t, err := template.New("index").Funcs(template.FuncMap{"join": join, "add": add}).ParseFiles("index.html", "posts.html")
+	t, err := template.New("index").Funcs(template.FuncMap{"join": join, "add": add}).ParseFiles("index.html", "./assets/pages/posts.html")
 	data := new(Data)
 	if r.URL.Path != "/" || r.Method != "GET" {
 		errorHandler(w, r, http.StatusNotFound)
@@ -115,7 +115,7 @@ func Signup(w http.ResponseWriter, r *http.Request, s *Session) {
 		http.Redirect(w, r, "/", 302)
 	}
 	creds := &Credentials{}
-	t, _ := template.ParseFiles("register.html")
+	t, _ := template.ParseFiles("./assets/pages/register.html")
 	data := ""
 	if r.Method == "GET" {
 
@@ -218,7 +218,7 @@ func Signin(w http.ResponseWriter, r *http.Request, s *Session) {
 	// Parse and decode the request body into a new `Credentials` instance
 	creds := &Credentials{}
 	data := ""
-	t, _ := template.ParseFiles("login.html")
+	t, _ := template.ParseFiles("./assets/pages/login.html")
 	if r.Method == "GET" {
 		t.ExecuteTemplate(w, "login", nil)
 	} else {
@@ -398,13 +398,68 @@ func addLike(w http.ResponseWriter, r *http.Request, s *Session) {
 		id := r.URL.Path[len("/like/"):]
 		author := s.Username
 		created := getNowTime()
+		checkLike := db.QueryRow("select author from likes where author=$1 and numpost=$2", author, id)
+		storedlike := &Likes{}
+		// Store the obtained password in `storedpost`
+		err := checkLike.Scan(&storedlike.Author)
+		if err == nil {
+
+			if err != sql.ErrNoRows {
+				//w.WriteHeader(http.StatusUnauthorized)
+				fmt.Println("You already liked.")
+				// data = "Username already taken"
+				// t.ExecuteTemplate(w, "register", data)
+				return
+			}
+			// If the error is of any other type, send a 500 status
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
 		tx, _ := db.Begin()
 		stmt, _ := tx.Prepare("insert into likes (author,numpost,date) values (?,?,?)")
-		_, err := stmt.Exec(author, id, created)
+		_, err = stmt.Exec(author, id, created)
 		checkError(err)
 		tx.Commit()
 		fmt.Println("liked")
 		http.Redirect(w, r, "/", 302)
+	}
+}
+
+func removeLike(w http.ResponseWriter, r *http.Request, s *Session) {
+	if s.Username == "" {
+		return
+	}
+	if r.Method == "GET" {
+		http.Redirect(w, r, "/", 302)
+	} else {
+		id := r.URL.Path[len("/unlike/"):]
+		author := s.Username
+		created := getNowTime()
+		checkLike := db.QueryRow("select author from likes where author=$1 and numpost=$2", author, id)
+		storedlike := &Likes{}
+
+		err := checkLike.Scan(&storedlike.Author)
+		if err == nil {
+
+			if err != sql.ErrNoRows {
+				//w.WriteHeader(http.StatusUnauthorized)
+				fmt.Println("You already liked.")
+				// data = "Username already taken"
+				// t.ExecuteTemplate(w, "register", data)
+				tx, _ := db.Begin()
+				stmt, _ := tx.Prepare("insert into likes (author,numpost,date) values (?,?,?)")
+				_, err = stmt.Exec(author, id, created)
+				checkError(err)
+				tx.Commit()
+				fmt.Println("unliked")
+				http.Redirect(w, r, "/", 302)
+				return
+			}
+			// If the error is of any other type, send a 500 status
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
 	}
 }
 
@@ -421,7 +476,7 @@ func CreatePost(w http.ResponseWriter, r *http.Request, s *Session) {
 		http.Redirect(w, r, "/", 302)
 	}
 	post := &Post{}
-	t, _ := template.ParseFiles("createpost.html")
+	t, _ := template.ParseFiles("./assets/pages/createpost.html")
 	data := ""
 	if r.Method == "GET" {
 
