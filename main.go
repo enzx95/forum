@@ -218,9 +218,9 @@ func Signin(w http.ResponseWriter, r *http.Request, s *Session) {
 	// Parse and decode the request body into a new `Credentials` instance
 	creds := &Credentials{}
 	data := ""
-	t, _ := template.ParseFiles("./assets/pages/login.html")
+	t, _ := template.ParseFiles("./assets/pages/register.html")
 	if r.Method == "GET" {
-		t.ExecuteTemplate(w, "login", nil)
+		t.ExecuteTemplate(w, "login2", nil)
 	} else {
 		r.ParseForm()
 		creds.Email = r.FormValue("email")
