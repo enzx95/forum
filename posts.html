@@ -20,8 +20,9 @@
 		{{end}}
 			
 
-        {{.}}<br>
+        {{.}}
 		<p>Likes: {{$likes}}</p> 
+		{{$likes = 0}}
 		<form action="/like/{{.Id}}" method="post">
 			<input type="submit" name="like" value="Like" />
 		</form>

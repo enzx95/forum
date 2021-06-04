@@ -398,13 +398,68 @@ func addLike(w http.ResponseWriter, r *http.Request, s *Session) {
 		id := r.URL.Path[len("/like/"):]
 		author := s.Username
 		created := getNowTime()
+		checkLike := db.QueryRow("select author from likes where author=$1 and numpost=$2", author, id)
+		storedlike := &Likes{}
+		// Store the obtained password in `storedpost`
+		err := checkLike.Scan(&storedlike.Author)
+		if err == nil {
+
+			if err != sql.ErrNoRows {
+				//w.WriteHeader(http.StatusUnauthorized)
+				fmt.Println("You already liked.")
+				// data = "Username already taken"
+				// t.ExecuteTemplate(w, "register", data)
+				return
+			}
+			// If the error is of any other type, send a 500 status
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
 		tx, _ := db.Begin()
 		stmt, _ := tx.Prepare("insert into likes (author,numpost,date) values (?,?,?)")
-		_, err := stmt.Exec(author, id, created)
+		_, err = stmt.Exec(author, id, created)
 		checkError(err)
 		tx.Commit()
 		fmt.Println("liked")
 		http.Redirect(w, r, "/", 302)
+	}
+}
+
+func removeLike(w http.ResponseWriter, r *http.Request, s *Session) {
+	if s.Username == "" {
+		return
+	}
+	if r.Method == "GET" {
+		http.Redirect(w, r, "/", 302)
+	} else {
+		id := r.URL.Path[len("/unlike/"):]
+		author := s.Username
+		created := getNowTime()
+		checkLike := db.QueryRow("select author from likes where author=$1 and numpost=$2", author, id)
+		storedlike := &Likes{}
+
+		err := checkLike.Scan(&storedlike.Author)
+		if err == nil {
+
+			if err != sql.ErrNoRows {
+				//w.WriteHeader(http.StatusUnauthorized)
+				fmt.Println("You already liked.")
+				// data = "Username already taken"
+				// t.ExecuteTemplate(w, "register", data)
+				tx, _ := db.Begin()
+				stmt, _ := tx.Prepare("insert into likes (author,numpost,date) values (?,?,?)")
+				_, err = stmt.Exec(author, id, created)
+				checkError(err)
+				tx.Commit()
+				fmt.Println("unliked")
+				http.Redirect(w, r, "/", 302)
+				return
+			}
+			// If the error is of any other type, send a 500 status
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
 	}
 }
 
