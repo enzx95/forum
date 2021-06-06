@@ -125,6 +125,14 @@ func PostPageHandler(w http.ResponseWriter, r *http.Request, s *Session) {
 
 	data.Current = data.Posts[0]
 
+	replies := []Reply{}
+
+	for i, p := range GetReplies() {
+		if p.PostId == data.Current.Id {
+			replies = append(replies, GetReplies()[i])
+		}
+	}
+	data.Replies = replies
 	// data.Liked = getLiked(data.Likes, data.Posts, s.Username)
 	// data.Posted = getPosted(data.Posts, s.Username)
 
@@ -192,6 +200,7 @@ type Data struct {
 	Liked    []Post
 	Posted   []Post
 	Current  Post
+	Replies  []Reply
 }
 
 func Signup(w http.ResponseWriter, r *http.Request, s *Session) {
@@ -775,6 +784,28 @@ func GetPosts() []Post {
 	rows.Close()
 	//fmt.Println(posts)
 	return posts
+}
+func GetReplies() []Reply {
+	replies := []Reply{}
+	rows := selectAllFromTables(db, "replies")
+	var id int
+	var author string
+	var content string
+	var created string
+	for rows.Next() {
+		rows.Scan(&id, &author, &content, &created)
+
+		reply := Reply{
+			PostId:  id,
+			Author:  author,
+			Content: content,
+			Created: created,
+		}
+		replies = append(replies, reply)
+	}
+	rows.Close()
+	//fmt.Println(posts)
+	return replies
 }
 
 func NumberLikes(Likes []Likes, Posts []Post) ([]Post, []Likes) {
