@@ -99,7 +99,7 @@ func PostPageHandler(w http.ResponseWriter, r *http.Request, s *Session) {
 		Created:    created,
 		Categories: tags,
 	}
-	fmt.Println(currentPost)
+	//fmt.Println(currentPost)
 	posts = append(posts, currentPost)
 	if err != nil {
 
@@ -495,14 +495,16 @@ type Dislikes struct {
 }
 
 func addLike(w http.ResponseWriter, r *http.Request, s *Session) {
+	id := r.URL.Path[len("/like/"):]
+	url := fmt.Sprintf("/post/%v", id)
 	if s.Username == "" {
-		http.Redirect(w, r, "/", 302)
+		http.Redirect(w, r, url, 302)
 		return
 	}
 	if r.Method == "GET" {
 		http.Redirect(w, r, "/", 302)
 	} else {
-		id := r.URL.Path[len("/like/"):]
+
 		author := s.Username
 		created := getNowTime()
 		checkLike := db.QueryRow("select author from likes where author=$1 and numpost=$2", author, id)
@@ -517,7 +519,7 @@ func addLike(w http.ResponseWriter, r *http.Request, s *Session) {
 				checkError(err)
 				tx.Commit()
 				fmt.Println("like removed")
-				http.Redirect(w, r, "/", 302)
+				http.Redirect(w, r, url, 302)
 				return
 			}
 			w.WriteHeader(http.StatusInternalServerError)
@@ -535,7 +537,7 @@ func addLike(w http.ResponseWriter, r *http.Request, s *Session) {
 				checkError(err)
 				tx.Commit()
 				fmt.Println("dislike removed")
-				//http.Redirect(w, r, "/", 302)
+				//http.Redirect(w, r, url, 302)
 			}
 		}
 		tx, _ := db.Begin()
@@ -544,19 +546,21 @@ func addLike(w http.ResponseWriter, r *http.Request, s *Session) {
 		checkError(err)
 		tx.Commit()
 		fmt.Println("liked")
-		http.Redirect(w, r, "/", 302)
+		http.Redirect(w, r, url, 302)
 	}
 }
 
 func addDislike(w http.ResponseWriter, r *http.Request, s *Session) {
+	id := r.URL.Path[len("/dislike/"):]
+	url := fmt.Sprintf("/post/%v", id)
 	if s.Username == "" {
-		http.Redirect(w, r, "/", 302)
+		http.Redirect(w, r, url, 302)
 		return
 	}
 	if r.Method == "GET" {
 		http.Redirect(w, r, "/", 302)
 	} else {
-		id := r.URL.Path[len("/dislike/"):]
+
 		author := s.Username
 		created := getNowTime()
 		checkDislike := db.QueryRow("select author from dislikes where author=$1 and numpost=$2", author, id)
@@ -571,7 +575,7 @@ func addDislike(w http.ResponseWriter, r *http.Request, s *Session) {
 				checkError(err)
 				tx.Commit()
 				fmt.Println("dislike removed")
-				http.Redirect(w, r, "/", 302)
+				http.Redirect(w, r, url, 302)
 				return
 			}
 			w.WriteHeader(http.StatusInternalServerError)
@@ -589,7 +593,7 @@ func addDislike(w http.ResponseWriter, r *http.Request, s *Session) {
 				checkError(err)
 				tx.Commit()
 				fmt.Println("like removed")
-				//http.Redirect(w, r, "/", 302)
+				//http.Redirect(w, r, url, 302)
 			}
 		}
 		tx, _ := db.Begin()
@@ -598,7 +602,7 @@ func addDislike(w http.ResponseWriter, r *http.Request, s *Session) {
 		checkError(err)
 		tx.Commit()
 		fmt.Println("disliked")
-		http.Redirect(w, r, "/", 302)
+		http.Redirect(w, r, url, 302)
 	}
 }
 

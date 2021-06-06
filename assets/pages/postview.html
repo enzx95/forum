@@ -1,15 +1,23 @@
 {{define "postview"}}
 
 <html>
-	<head>
-	<title></title>
-	</head>
-	<body>
-	hello
+
+<head>
+    <title></title>
+</head>
+
+<body>
     {{.Current}}
-	</body>
+    
+    <form action="/like/{{.Current.Id}}" method="post">
+        <input type="submit" name="like" value="Like" />
+    </form>
+    <form action="/dislike/{{.Current.Id}}" method="post">
+        <input type="submit" name="dislike" value="Dislike" />
+    </form>
+</body>
+
 </html>
 
 
 {{end}}
-

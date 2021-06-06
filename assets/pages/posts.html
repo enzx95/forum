@@ -10,15 +10,8 @@
 		<a href="/post/{{.Id}}">
         {{.}}
 		</a>
-		<p>Likes: {{.Likes}}</p>
-		<p>Dislikes: {{.Dislikes}}</p>
-		<form action="/like/{{.Id}}" method="post">
-			<input type="submit" name="like" value="Like" />
-		</form>
-		<form action="/dislike/{{.Id}}" method="post">
-			<input type="submit" name="dislike" value="Dislike" />
-		</form>
-		<br>
+		<p>Likes: {{.Likes}} Dislikes: {{.Dislikes}}</p><br>
+		
         {{end}}
 		
 	</body>
