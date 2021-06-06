@@ -7,8 +7,16 @@
 	</head>
 	<body>
 		<form action="/create" method="post">
-			Content; <input type="text" name="content">
+			Content: <input type="text" name="content">
 			Title:<input type="text" name="title">
+			<select name="categories" id="categories" multiple="multiple">
+				<option value="Go">Go</option>
+				<option value="JavaScript">JavaScript</option>
+				<option value="HTML">HTML</option>
+				<option value="CSS">CSS</option>
+				<option value="C">C</option>
+				<option value="C++">C++</option>
+			</select>
 			<input type="submit" value="create">
 		</form>
 		{{.}}

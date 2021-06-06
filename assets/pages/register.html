@@ -1,24 +1,27 @@
 
 {{define "login2"}}
 <html>
-	<head>
-	<title></title>
-	</head>
-	<body>
-		<form action="/signin" method="post">
-			Email:<input type="text" name="email">
-			Password:<input type="password" name="password">
-			<input type="submit" value="Login">
-		</form>
-		{{.}}
-    <form action="/signup" method="post">
-			Username:<input type="text" name="username">
-			Email:<input type="text" name="email">
-			Password:<input type="password" name="password">
-			Confirm password:<input type="password" name="confpassword">
-			<input type="submit" value="Register">
-		</form>
-	</body>
+
+<head>
+	<title>GoForum</title>
+</head>
+
+<body>
+	<form action="/signin" method="post">Email:
+		<input type="text" name="email">Password:
+		<input type="password" name="password">
+		<input type="submit" value="Login">
+	</form>
+	{{.}}
+	<form action="/signup" method="post">Username:
+		<input type="text" name="username">Email:
+		<input type="text" name="email">Password:
+		<input type="password" name="password">Confirm password:
+		<input type="password" name="confpassword">
+		<input type="submit" value="Register">
+	</form>
+</body>
+
 </html>
 
 {{end}}

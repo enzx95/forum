@@ -101,7 +101,7 @@ func initDB() *sql.DB {
 	db.Exec(`create table if not exists users (username text NOT NULL, email text NOT NULL, password text NOT NULL)`)
 	db.Exec(`create table if not exists likes (author text NOT NULL, numpost text NOT NULL, date text NOT NULL)`)
 	db.Exec(`create table if not exists dislikes (author text NOT NULL, numpost text NOT NULL, date text NOT NULL)`)
-	db.Exec(`create table if not exists posts (id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, author text NOT NULL, content text NOT NULL, title text NOT NULL, created text NOT NULL)`)
+	db.Exec(`create table if not exists posts (id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, author text NOT NULL, content text NOT NULL, title text NOT NULL, created text NOT NULL, categories text NOT NULL)`)
 	return db
 }
 
@@ -385,13 +385,14 @@ func AlreadyLoggedIn(r *http.Request) bool {
 }
 
 type Post struct {
-	Id       int
-	Author   string
-	Content  string
-	Title    string
-	Created  string
-	Likes    int
-	Dislikes int
+	Id         int
+	Author     string
+	Content    string
+	Title      string
+	Created    string
+	Likes      int
+	Dislikes   int
+	Categories []string
 }
 
 type Buttons struct {
@@ -518,11 +519,11 @@ func addDislike(w http.ResponseWriter, r *http.Request, s *Session) {
 	}
 }
 
-func addPost(db *sql.DB, author string, content string, title string) {
+func addPost(db *sql.DB, author string, content string, title string, categories string) {
 	created := getNowTime()
 	tx, _ := db.Begin()
-	stmt, _ := tx.Prepare("insert into posts (author,content,title,created) values (?,?,?,?)")
-	_, err := stmt.Exec(author, content, title, created)
+	stmt, _ := tx.Prepare("insert into posts (author,content,title,created,categories) values (?,?,?,?,?)")
+	_, err := stmt.Exec(author, content, title, created, categories)
 	checkError(err)
 	tx.Commit()
 }
@@ -530,6 +531,7 @@ func CreatePost(w http.ResponseWriter, r *http.Request, s *Session) {
 	if s.Username == "" {
 		http.Redirect(w, r, "/", 302)
 	}
+
 	post := &Post{}
 	t, _ := template.ParseFiles("./assets/pages/createpost.html")
 	data := ""
@@ -541,7 +543,18 @@ func CreatePost(w http.ResponseWriter, r *http.Request, s *Session) {
 		r.ParseForm()
 		post.Content = r.FormValue("content")
 		post.Title = r.FormValue("title")
+		//post.Categories = r.Form["categories"]
+		//fmt.Print(r.Form["categories"])
+		categories := ""
+		for _, k := range r.Form["categories"] {
+			if categories == "" {
+				categories = k
+			} else {
+				categories = categories + " " + k
+			}
+		}
 
+		fmt.Println(categories)
 		post.Author = s.Username
 
 		if post.Content == "" {
@@ -560,9 +573,9 @@ func CreatePost(w http.ResponseWriter, r *http.Request, s *Session) {
 			return
 		}
 
-		addPost(db, post.Author, post.Content, post.Title)
-		data = "Post sent"
-		t.ExecuteTemplate(w, "create", data)
+		addPost(db, post.Author, post.Content, post.Title, categories)
+		// data = "Post sent"
+		// t.ExecuteTemplate(w, "create", data)
 		fmt.Println("posted")
 		http.Redirect(w, r, "/", 302)
 		return
@@ -584,14 +597,17 @@ func GetPosts() []Post {
 	var content string
 	var title string
 	var created string
+	var categories string
 	for rows.Next() {
-		rows.Scan(&id, &author, &title, &content, &created)
+		rows.Scan(&id, &author, &title, &content, &created, &categories)
+		tags := strings.Split(categories, " ")
 		post := Post{
-			Id:      id,
-			Author:  author,
-			Title:   title,
-			Content: content,
-			Created: created,
+			Id:         id,
+			Author:     author,
+			Title:      title,
+			Content:    content,
+			Created:    created,
+			Categories: tags,
 		}
 		posts = append(posts, post)
 	}
