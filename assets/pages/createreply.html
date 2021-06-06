@@ -1,0 +1,18 @@
+{{define "reply"}}
+
+
+<html>
+	<head>
+	<title></title>
+	</head>
+	<body>
+		<form action="/reply/{{.}}" method="post">
+			Content: <input type="text" name="content">
+
+			<input type="submit" value="reply">
+		</form>
+		{{.}}
+	</body>
+</html>
+
+{{end}}

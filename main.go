@@ -469,7 +469,7 @@ type Post struct {
 	Categories []string
 }
 
-type Replies struct {
+type Reply struct {
 	PostId   int
 	Author   string
 	Content  string
@@ -614,6 +614,14 @@ func addPost(db *sql.DB, author string, content string, title string, categories
 	checkError(err)
 	tx.Commit()
 }
+func addReply(db *sql.DB, author string, content string, id int) {
+	created := getNowTime()
+	tx, _ := db.Begin()
+	stmt, _ := tx.Prepare("insert into replies (id,author,content,created) values (?,?,?,?)")
+	_, err := stmt.Exec(id, author, content, created)
+	checkError(err)
+	tx.Commit()
+}
 func CreatePost(w http.ResponseWriter, r *http.Request, s *Session) {
 	if s.Username == "" {
 		http.Redirect(w, r, "/", 302)
@@ -665,6 +673,72 @@ func CreatePost(w http.ResponseWriter, r *http.Request, s *Session) {
 		// t.ExecuteTemplate(w, "create", data)
 		fmt.Println("posted")
 		http.Redirect(w, r, "/", 302)
+		return
+	}
+}
+
+func CreateReply(w http.ResponseWriter, r *http.Request, s *Session) {
+	if s.Username == "" {
+		http.Redirect(w, r, "/", 302)
+	}
+	id := r.URL.Path[len("/reply/"):]
+	if id == "" {
+		errorHandler(w, r, http.StatusNotFound)
+		return
+	}
+
+	postID, err := strconv.Atoi(id)
+	if err != nil {
+		errorHandler(w, r, http.StatusNotFound)
+		return
+	}
+	url := fmt.Sprintf("/post/%v", id)
+	reply := &Reply{}
+	t, _ := template.ParseFiles("./assets/pages/createreply.html")
+	data := ""
+	if r.Method == "GET" {
+
+		t.ExecuteTemplate(w, "reply", id)
+	} else {
+
+		r.ParseForm()
+		reply.Content = r.FormValue("content")
+		//post.Categories = r.Form["categories"]
+		//fmt.Print(r.Form["categories"])
+
+		reply.Author = s.Username
+		result := db.QueryRow("select title from posts where id=$1", postID)
+
+		storedpost := &Post{}
+
+		err := result.Scan(&storedpost.Title)
+		if err != nil {
+			// If an entry with the username does not exist, send an "Unauthorized"(401) status
+			if err == sql.ErrNoRows {
+				w.WriteHeader(http.StatusUnauthorized)
+				//w.Write([]byte("Email not found"))
+				fmt.Println("Post does not exist")
+				return
+			}
+			// If the error is of any other type, send a 500 status
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		if reply.Content == "" {
+			w.WriteHeader(http.StatusBadRequest)
+			//w.Write([]byte("Email is missing"))
+			fmt.Println("Content is missing")
+			data = "Content is missing"
+			t.ExecuteTemplate(w, "reply", data)
+			return
+		}
+
+		addReply(db, reply.Author, reply.Content, postID)
+		// data = "Post sent"
+		// t.ExecuteTemplate(w, "create", data)
+		fmt.Println("replied")
+		http.Redirect(w, r, url, 302)
 		return
 	}
 }
@@ -814,5 +888,6 @@ func main() {
 	http.HandleFunc("/like/", Middleware(addLike))
 	http.HandleFunc("/dislike/", Middleware(addDislike))
 	http.HandleFunc("/post/", Middleware(PostPageHandler))
+	http.HandleFunc("/reply/", Middleware(CreateReply))
 	http.ListenAndServe(":8080", nil)
 }
