@@ -7,7 +7,9 @@
 	<body>
 	
 		{{range .Posts}}
+		<a href="/post/{{.Id}}">
         {{.}}
+		</a>
 		<p>Likes: {{.Likes}}</p>
 		<p>Dislikes: {{.Dislikes}}</p>
 		<form action="/like/{{.Id}}" method="post">

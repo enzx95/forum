@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 	"strings"
 	"text/template"
 	"time"
@@ -61,7 +62,78 @@ func mainPageHandler(w http.ResponseWriter, r *http.Request, s *Session) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
+func PostPageHandler(w http.ResponseWriter, r *http.Request, s *Session) {
+	t, err := template.New("postview").Funcs(template.FuncMap{"join": join, "add": add}).ParseFiles("./assets/pages/postview.html")
+	//t, err := template.ParseFiles("./assets/pages/postview.html")
+	data := new(Data)
 
+	if r.Method != "GET" {
+		errorHandler(w, r, http.StatusNotFound)
+		return
+	}
+
+	id := r.URL.Path[len("/post/"):]
+	if id == "" {
+		errorHandler(w, r, http.StatusNotFound)
+		return
+	}
+
+	postID, err := strconv.Atoi(id)
+	if err != nil {
+		errorHandler(w, r, http.StatusNotFound)
+		return
+	}
+
+	getPost := db.QueryRow("select * from posts where  id=$1", postID)
+
+	var numpost int
+	var author, content, title, created, categories string
+	err = getPost.Scan(&numpost, &author, &content, &title, &created, &categories)
+	posts := []Post{}
+	tags := strings.Split(categories, " ")
+	currentPost := Post{
+		Id:         numpost,
+		Author:     author,
+		Title:      title,
+		Content:    content,
+		Created:    created,
+		Categories: tags,
+	}
+	fmt.Println(currentPost)
+	posts = append(posts, currentPost)
+	if err != nil {
+
+		if err == sql.ErrNoRows {
+			errorHandler(w, r, http.StatusNotFound)
+			return
+		}
+	}
+
+	// if AlreadyLoggedIn(r) {
+	// 	data.Buttons.Auth = `<li><a href="/signout">Sign out</a></li>`
+	// } else {
+	// 	data.Buttons.Auth = `<li><a href="/signin">Sign in</a></li>
+	// 	<li><a href="/signup">Sign up</a></li>`
+	// }
+
+	data.Posts = posts
+	data.Likes = GetLikes()
+	data.Dislikes = GetDislikes()
+
+	data.Posts, data.Likes = NumberLikes(data.Likes, data.Posts)
+	data.Posts, data.Dislikes = NumberDislikes(data.Dislikes, data.Posts)
+
+	data.Current = data.Posts[0]
+
+	// data.Liked = getLiked(data.Likes, data.Posts, s.Username)
+	// data.Posted = getPosted(data.Posts, s.Username)
+
+	t.ExecuteTemplate(w, "postview", data)
+
+	// if err != nil {
+	// 	http.Error(w, err.Error(), http.StatusInternalServerError)
+	// }
+}
 func errorHandler(w http.ResponseWriter, r *http.Request, status int) {
 	w.WriteHeader(status)
 	if status == http.StatusNotFound {
@@ -102,6 +174,7 @@ func initDB() *sql.DB {
 	db.Exec(`create table if not exists likes (author text NOT NULL, numpost text NOT NULL, date text NOT NULL)`)
 	db.Exec(`create table if not exists dislikes (author text NOT NULL, numpost text NOT NULL, date text NOT NULL)`)
 	db.Exec(`create table if not exists posts (id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, author text NOT NULL, content text NOT NULL, title text NOT NULL, created text NOT NULL, categories text NOT NULL)`)
+	db.Exec(`create table if not exists replies (id INTEGER NOT NULL , author text NOT NULL, content text NOT NULL,  created text NOT NULL)`)
 	return db
 }
 
@@ -118,6 +191,7 @@ type Data struct {
 	Dislikes []Dislikes
 	Liked    []Post
 	Posted   []Post
+	Current  Post
 }
 
 func Signup(w http.ResponseWriter, r *http.Request, s *Session) {
@@ -393,6 +467,15 @@ type Post struct {
 	Likes      int
 	Dislikes   int
 	Categories []string
+}
+
+type Replies struct {
+	PostId   int
+	Author   string
+	Content  string
+	Created  string
+	Likes    int
+	Dislikes int
 }
 
 type Buttons struct {
@@ -726,5 +809,6 @@ func main() {
 	http.HandleFunc("/create", Middleware(CreatePost))
 	http.HandleFunc("/like/", Middleware(addLike))
 	http.HandleFunc("/dislike/", Middleware(addDislike))
+	http.HandleFunc("/post/", Middleware(PostPageHandler))
 	http.ListenAndServe(":8080", nil)
 }
