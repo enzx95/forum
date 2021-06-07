@@ -20,7 +20,15 @@
         <input type="submit" value="reply" />
     </form><br>
 
-    {{.Replies}}
+    {{range .Replies}}
+    <li>{{.}}</li><br>
+    <form action="/replylike/{{.PostId}}/{{.Id}}" method="post">
+        <input type="submit" name="like" value="/replylike/{{.PostId}}/{{.Id}}" />
+    </form>
+    <form action="/replydislike/{{.PostId}}/{{.Id}}" method="post">
+        <input type="submit" name="dislike" value="/replydislike/{{.PostId}}/{{.Id}}" />
+    </form>
+    {{end}}
 
 
 

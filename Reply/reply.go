@@ -15,15 +15,18 @@ import (
 func addReply(db *sql.DB, author string, content string, id int) {
 	created := helper.GetNowTime()
 	tx, _ := db.Begin()
-	stmt, _ := tx.Prepare("insert into replies (id,author,content,created) values (?,?,?,?)")
+	stmt, _ := tx.Prepare("insert into replies (numpost,author,content,created) values (?,?,?,?)")
 	_, err := stmt.Exec(id, author, content, created)
 	helper.CheckError(err)
 	tx.Commit()
 }
 
 func CreateReply(w http.ResponseWriter, r *http.Request, s *authentification.Session) {
+
+	//fmt.Print(s.Username)
 	if s.Username == "" {
 		http.Redirect(w, r, "/", 302)
+		//fmt.Print("hey")
 	}
 	id := r.URL.Path[len("/reply/"):]
 	if id == "" {
@@ -66,6 +69,7 @@ func CreateReply(w http.ResponseWriter, r *http.Request, s *authentification.Ses
 			}
 			// If the error is of any other type, send a 500 status
 			w.WriteHeader(http.StatusInternalServerError)
+			fmt.Println("error")
 			return
 		}
 
@@ -91,14 +95,17 @@ func GetReplies() []Reply {
 	replies := []Reply{}
 	rows := database.SelectAllFromTables(database.DB, "replies")
 	var id int
+	var numpost int
 	var author string
 	var content string
 	var created string
+
 	for rows.Next() {
-		rows.Scan(&id, &author, &content, &created)
+		rows.Scan(&id, &numpost, &author, &content, &created)
 
 		reply := Reply{
-			PostId:  id,
+			Id:      id,
+			PostId:  numpost,
 			Author:  author,
 			Content: content,
 			Created: created,

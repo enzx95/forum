@@ -1,6 +1,7 @@
 package reply
 
 type Reply struct {
+	Id       int
 	PostId   int
 	Author   string
 	Content  string

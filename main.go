@@ -17,14 +17,16 @@ import (
 )
 
 type Data struct {
-	Buttons  Buttons
-	Posts    []post.Post
-	Likes    []interaction.Likes
-	Dislikes []interaction.Dislikes
-	Liked    []post.Post
-	Posted   []post.Post
-	Current  post.Post
-	Replies  []reply.Reply
+	Buttons       Buttons
+	Posts         []post.Post
+	Likes         []interaction.Likes
+	Dislikes      []interaction.Dislikes
+	Liked         []post.Post
+	Posted        []post.Post
+	Current       post.Post
+	Replies       []reply.Reply
+	Replylikes    []interaction.Likes
+	ReplyDislikes []interaction.Dislikes
 }
 
 type Buttons struct {
@@ -134,6 +136,11 @@ func PostPageHandler(w http.ResponseWriter, r *http.Request, s *authentification
 		}
 	}
 	data.Replies = replies
+	data.Replylikes = interaction.GetReplyLikes()
+	data.ReplyDislikes = interaction.GetReplyDislikes()
+	data.Replies, data.Replylikes = interaction.NumberReplyLikes(data.Replylikes, data.Replies)
+	data.Replies, data.ReplyDislikes = interaction.NumberReplyDislikes(data.ReplyDislikes, data.Replies)
+
 	// data.Liked = getLiked(data.Likes, data.Posts, s.Username)
 	// data.Posted = getPosted(data.Posts, s.Username)
 
@@ -158,5 +165,7 @@ func main() {
 	http.HandleFunc("/dislike/", authentification.Middleware(interaction.AddDislike))
 	http.HandleFunc("/post/", authentification.Middleware(PostPageHandler))
 	http.HandleFunc("/reply/", authentification.Middleware(reply.CreateReply))
+	http.HandleFunc("/replylike/", authentification.Middleware(interaction.LikeReply))
+	http.HandleFunc("/replydislike/", authentification.Middleware(interaction.DislikeReply))
 	http.ListenAndServe(":8080", nil)
 }
