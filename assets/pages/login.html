@@ -3,15 +3,47 @@
 
 <html>
 	<head>
-	<title></title>
+		<meta charset="UTF-8">
+		<title>PROJET-FORUM</title>
+		<link rel="stylesheet" href="/assets/css/style.css">
 	</head>
 	<body>
-		<form action="/signin" method="post">
-			Email:<input type="text" name="email">
-			Password:<input type="password" name="password">
-			<input type="submit" value="Login">
-		</form>
-		{{.}}
+
+		<div class="navbar">
+			<img class="logo" src="/assets/img/LOGO_YNOV.png">
+			<nav>
+				<ul class="links">
+					<li><a href="/index.html">Home</a></li>
+					<li><a href="/assets/pages/login.html">Sign in</a></li>
+				</ul>
+			</nav>
+			<a class="contact" href="#"><button>Contact</button></a>
+			{{.Buttons}}
+		</div>
+
+		<div class="login">
+			<h3>Connexion :</h3>
+
+			<form action="/signin" method="post">
+				Email:<input type="text" name="email">
+				Password:<input type="password" name="password">
+				<input type="submit" value="Login">
+			</form>
+			{{.}}
+		</div>
+
+		<div class="register">
+			<h3>Si vous n'avez pas de compte, vous pouvez en créer un ci-dessous :</h3>
+
+			<form action="/signup" method="post">
+				Username:<input type="text" name="username">
+				Email:<input type="text" name="email">
+				Password:<input type="password" name="password">
+				Confirm password:<input type="password" name="confpassword">
+				<input type="submit" value="Register">
+			</form>
+			{{.}}
+		</div>
 	</body>
 </html>
 

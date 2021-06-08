@@ -11,16 +11,15 @@
         <img class="logo" src="/assets/img/LOGO_YNOV.png">
         <nav>
             <ul class="links">
-                <li><a href="index.html">Home</a></li>
-                <li><a href="/assets/pages/login.html">Sign in</a></li>
+                <li><a href="/">Home</a></li>
+                {{.Buttons.Auth}}
             </ul>
         </nav>
         <a class="contact" href="#"><button>Contact</button></a>
-        {{.Buttons}}
     </div>
 
     <div class="post">
-        <a class="create_post" href="/assets/pages/createpost.html"><h3>New post +</h3></a>
+        <a class="create_post" href="/create"><h3>New post +</h3></a>
     </div>
 
     {{template "posts" .}}
