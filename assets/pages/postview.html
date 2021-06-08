@@ -1,0 +1,40 @@
+{{define "postview"}}
+
+<html>
+
+<head>
+    <title></title>
+</head>
+
+<body>
+    {{.Current}}
+
+    <form action="/like/{{.Current.Id}}" method="post">
+        <input type="submit" name="like" value="Like" />
+    </form>
+    <form action="/dislike/{{.Current.Id}}" method="post">
+        <input type="submit" name="dislike" value="Dislike" />
+    </form><br>
+
+    <form action="/reply/{{.Current.Id}}">
+        <input type="submit" value="reply" />
+    </form><br>
+
+    {{range .Replies}}
+    <li>{{.}}</li><br>
+    <form action="/replylike/{{.PostId}}/{{.Id}}" method="post">
+        <input type="submit" name="like" value="/replylike/{{.PostId}}/{{.Id}}" />
+    </form>
+    <form action="/replydislike/{{.PostId}}/{{.Id}}" method="post">
+        <input type="submit" name="dislike" value="/replydislike/{{.PostId}}/{{.Id}}" />
+    </form>
+    {{end}}
+
+
+
+</body>
+
+</html>
+
+
+{{end}}

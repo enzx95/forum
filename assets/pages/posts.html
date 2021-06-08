@@ -5,28 +5,15 @@
 	<title></title>
 	</head>
 	<body>
-		{{ $id := 0 }}
-		{{ $likes := 0 }}
-		{{range .Likes}}
-		{{ $id = .Numpost }}
-		{{end}}
-		
-		
-
-
+	
 		{{range .Posts}}
-		{{ if eq  $id .Id }}
-		{{$likes = add $likes}}
-		{{end}}
-			
-
+		<a href="/post/{{.Id}}">
         {{.}}
-		<p>Likes: {{$likes}}</p> 
-		{{$likes = 0}}
-		<form action="/like/{{.Id}}" method="post">
-			<input type="submit" name="like" value="Like" />
-		</form>
+		</a>
+		<p>Likes: {{.Likes}} Dislikes: {{.Dislikes}}</p><br>
+		
         {{end}}
+		
 	</body>
 </html>
 
