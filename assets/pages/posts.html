@@ -7,9 +7,11 @@
 	<body>
 	
 		{{range .Posts}}
-		<a href="/post/{{.Id}}">
-        {{.}}
-		</a>
+		<a href="/post/{{.Id}}" >
+        {{.Title}}
+		</a><br>
+		{{.Content}}<br>
+		Post by {{.Author}}<br>
 		<p>Likes: {{.Likes}} Dislikes: {{.Dislikes}}</p><br>
 		
         {{end}}
