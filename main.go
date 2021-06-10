@@ -66,7 +66,7 @@ func mainPageHandler(w http.ResponseWriter, r *http.Request, s *authentification
 	}
 }
 func PostPageHandler(w http.ResponseWriter, r *http.Request, s *authentification.Session) {
-	t, err := template.New("postview").Funcs(template.FuncMap{"join": helper.Join, "add": helper.Add}).ParseFiles("./assets/pages/postview.html")
+	t, err := template.New("postview").Funcs(template.FuncMap{"join": helper.Join, "add": helper.Add}).ParseFiles("./assets/pages/postview.html", "./assets/pages/navbar.html")
 	//t, err := template.ParseFiles("./assets/pages/postview.html")
 	data := new(Data)
 
