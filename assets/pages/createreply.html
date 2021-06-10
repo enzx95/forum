@@ -1,17 +1,27 @@
 {{define "reply"}}
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Create reply</title>
+    <link rel="stylesheet" href="/assets/css/style.css">
+	<link rel="stylesheet" href="/assets/css/createreply.css">
 
-<html>
-	<head>
-	<title></title>
-	</head>
+</head>
+
 	<body>
+
+	<div class="createreply">
+		
 		<form action="/reply/{{.}}" method="post">
 			Content: <input type="text" name="content">
 
 			<input type="submit" value="reply">
 		</form>
 		{{.}}
+	
+</div>
 	</body>
 </html>
 

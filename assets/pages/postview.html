@@ -1,32 +1,38 @@
 {{define "postview"}}
-
-<html>
-
+<!DOCTYPE html>
+<html lang="en">
 <head>
-    <title></title>
+	<meta charset="UTF-8">
+	<title>Likes and Dislikes</title>
+    <link rel="stylesheet" href="/assets/css/style.css">
+	<link rel="stylesheet" href="/assets/css/postview.css">
 </head>
 
 <body>
-    {{.Current}}
 
+   {{template "navbar" .}}
+
+
+    {{.Current}}
+    <a href="" class="button like">Like</a>
     <form action="/like/{{.Current.Id}}" method="post">
-        <input type="submit" name="like" value="Like" />
+        <input type="submit" name="like" value="Like" class="buttonlike" />
     </form>
     <form action="/dislike/{{.Current.Id}}" method="post">
-        <input type="submit" name="dislike" value="Dislike" />
+        <input type="submit" name="dislike" value="Dislike" class="buttondislike"/>
     </form><br>
 
     <form action="/reply/{{.Current.Id}}">
-        <input type="submit" value="reply" />
+        <input type="submit" value="reply"  class="button reply"/>
     </form><br>
 
     {{range .Replies}}
     <li>{{.}}</li><br>
     <form action="/replylike/{{.PostId}}/{{.Id}}" method="post">
-        <input type="submit" name="like" value="/replylike/{{.PostId}}/{{.Id}}" />
+        <input type="submit" name="like" value="/replylike/{{.PostId}}/{{.Id}}" class="buttonreplylike" />
     </form>
     <form action="/replydislike/{{.PostId}}/{{.Id}}" method="post">
-        <input type="submit" name="dislike" value="/replydislike/{{.PostId}}/{{.Id}}" />
+        <input type="submit" name="dislike" value="/replydislike/{{.PostId}}/{{.Id}}" class="buttonreplydislike"  />
     </form>
     {{end}}
 
