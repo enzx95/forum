@@ -59,8 +59,22 @@ button:hover {
     background-color: #B67332;
 }
 
+.buttonlogin {
+   
+}
+
+.links2 li {
+    margin-top: 5%;
+}
+
 .create_post {
+    border: none;
+    color: white;
+    background-color: black;
+    padding: 8px 25px;
     text-align: center;
+    text-decoration: none;
+    display: inline-block;
 }
 
 .btn-area {
@@ -72,4 +86,25 @@ button:hover {
     padding: 10px 30px;
     border-radius: 5px;
     background: #d22938
+}
+
+.welcome {
+    text-align: center;
+    background-color: white;
+    padding: 9px 25px;
+    margin: 6%;
+    border: none;
+    border-radius: 50px;
+}
+
+.post {
+    width: 25%;
+    float: left;
+    margin: 0;
+}
+
+.discussion {
+    float: right;
+    width: 75%;
+    margin: 0;
 }
