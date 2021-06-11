@@ -3,12 +3,32 @@
 
 <html>
 	<head>
+		<link rel="stylesheet" href="/assets/css/style.css">
+		<link rel="stylesheet" href="/assets/css/createpost.css">
 	<title></title>
 	</head>
 	<body>
+		<img class="logo" src="/assets/img/LOGO_YNOV.png">
+		
+		
+		<h1 align="center">Posez votre question ! </h1>
+		
+
+		<div class="createpost">
+
 		<form action="/create" method="post">
-			Content: <input type="text" name="content">
-			Title:<input type="text" name="title">
+			<h3 align="center">SUJET :  </h3>
+			<input type="text" size="50" style="height: 40px;" name="content">
+			<br>
+			<br>
+			<br>
+			<br>
+			<h3 align="center">TITRE : </h3>
+			<input type="text" size="50" style="height: 40px;" name="title">
+			<br>
+			<br>
+			<br>
+			<br>
 			<select name="categories" id="categories" multiple="multiple">
 				<option value="Go">Go</option>
 				<option value="JavaScript">JavaScript</option>
@@ -17,9 +37,11 @@
 				<option value="C">C</option>
 				<option value="C++">C++</option>
 			</select>
+			<br>
 			<input type="submit" value="create">
 		</form>
 		{{.}}
+	</div> 
 	</body>
 </html>
 

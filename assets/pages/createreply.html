@@ -11,13 +11,17 @@
 </head>
 
 	<body>
+		<img class="logo" src="/assets/img/LOGO_YNOV.png">
 
 	<div class="createreply">
 		
 		<form action="/reply/{{.}}" method="post">
-			Content: <input type="text" name="content">
+			Content: <input type="text" size="50" style="height: 40px;" name="content" >
+		
 
-			<input type="submit" value="reply">
+			<input type="submit" value="reply" size="10" style="height:20px;" >
+			<a href="/post/1">Return</a>
+
 		</form>
 		{{.}}
 	
