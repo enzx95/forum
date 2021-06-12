@@ -8,10 +8,10 @@
 	
 		{{range .Posts}}
 		<a href="/post/{{.Id}}" >
-        {{.Title}}
+        <h3>{{.Title}}</h3>
 		</a><br>
 		{{.Content}}<br>
-		Post by {{.Author}}<br>
+		Posted by {{.Author}}<br>
 		<p>Likes: {{.Likes}} Dislikes: {{.Dislikes}}</p><br>
 		
         {{end}}

@@ -59,6 +59,8 @@ func mainPageHandler(w http.ResponseWriter, r *http.Request, s *authentification
 	data.Liked = interaction.GetLiked(data.Likes, data.Posts, s.Username)
 	data.Posted = post.GetPosted(data.Posts, s.Username)
 
+	//filtered := post.GetByCat(data.Posts, "CSS")
+
 	t.ExecuteTemplate(w, "index", data)
 
 	if err != nil {
@@ -145,10 +147,6 @@ func PostPageHandler(w http.ResponseWriter, r *http.Request, s *authentification
 	// data.Posted = getPosted(data.Posts, s.Username)
 
 	t.ExecuteTemplate(w, "postview", data)
-
-	// if err != nil {
-	// 	http.Error(w, err.Error(), http.StatusInternalServerError)
-	// }
 }
 
 func main() {

@@ -1,42 +1,48 @@
 {{define "postview"}}
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-	<meta charset="UTF-8">
-	<title>Likes and Dislikes</title>
+    <meta charset="UTF-8">
+    <title>Likes and Dislikes</title>
     <link rel="stylesheet" href="/assets/css/style.css">
-	<link rel="stylesheet" href="/assets/css/postview.css">
+    <link rel="stylesheet" href="/assets/css/postview.css">
 </head>
 
 <body>
 
-   {{template "navbar" .}}
+    {{template "navbar" .}}
 
-
-    {{.Current}}
-    <a href="" class="button like">Like</a>
+    <h3>{{.Current.Title}}</h3>
+    <br>
+    {{.Current.Content}}<br>
+    Posted by {{.Current.Author}}<br>
+    <p>Likes: {{.Current.Likes}} Dislikes: {{.Current.Dislikes}}</p><br>
     <form action="/like/{{.Current.Id}}" method="post">
         <input type="submit" name="like" value="Like" class="buttonlike" />
     </form>
     <form action="/dislike/{{.Current.Id}}" method="post">
-        <input type="submit" name="dislike" value="Dislike" class="buttondislike"/>
+        <input type="submit" name="dislike" value="Dislike" class="buttondislike" />
     </form><br>
 
     <form action="/reply/{{.Current.Id}}">
-        <input type="submit" value="reply"  class="button reply"/>
+        <input type="submit" value="reply" class="button reply" />
     </form><br>
 
     {{range .Replies}}
-    <li>{{.}}</li><br>
+    <li>{{.Author}} replied: </li><br>
+    {{.Content}}
+    <br>
+    <p>Likes: {{.Likes}} Dislikes: {{.Dislikes}}</p><br>
     <form action="/replylike/{{.PostId}}/{{.Id}}" method="post">
-        <input type="submit" name="like" value="/replylike/{{.PostId}}/{{.Id}}" class="buttonreplylike" />
+        <input type="submit" name="like" value="Like this comment" class="buttonreplylike" />
     </form>
     <form action="/replydislike/{{.PostId}}/{{.Id}}" method="post">
-        <input type="submit" name="dislike" value="/replydislike/{{.PostId}}/{{.Id}}" class="buttonreplydislike"  />
+        <input type="submit" name="dislike" value="Dislike this comment" class="buttonreplydislike" />
     </form>
-    
+
     {{end}}
-    
+
 
 
 

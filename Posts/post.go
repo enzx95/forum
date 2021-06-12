@@ -114,3 +114,18 @@ func GetPosted(Posts []Post, username string) []Post {
 	fmt.Println("Posted: ", posted)
 	return posted
 }
+
+func GetByCat(Posts []Post, categorie string) []Post {
+	filtered := []Post{}
+
+	for i, p := range Posts {
+		for _, k := range p.Categories {
+			if k == categorie {
+				filtered = append(filtered, Posts[i])
+			}
+		}
+	}
+
+	fmt.Println("Filtered: ", filtered)
+	return filtered
+}
