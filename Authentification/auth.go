@@ -12,6 +12,8 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+//Execute template and parse email/username/passwords entered by the user. Checks if any of the email/username is already used and returns an error if it is the case.
+//If not, add the user into the database and redirects to the main page.
 func Signup(w http.ResponseWriter, r *http.Request, s *Session) {
 	if AlreadyLoggedIn(r) {
 		http.Redirect(w, r, "/", 302)
@@ -108,6 +110,8 @@ func Signup(w http.ResponseWriter, r *http.Request, s *Session) {
 	}
 }
 
+//Execute template and parse email/passwords entered by the user. Checks if the email/password is valid  and returns an error if not.
+//Set the user as authorized.
 func Signin(w http.ResponseWriter, r *http.Request, s *Session) {
 	fmt.Println(AlreadyLoggedIn(r))
 	if AlreadyLoggedIn(r) {
@@ -168,11 +172,13 @@ func Signin(w http.ResponseWriter, r *http.Request, s *Session) {
 	}
 }
 
+//Delete the current user's session and redirects to main page.
 func Signout(w http.ResponseWriter, r *http.Request, s *Session) {
 	sessionStore.Delete(s)
 	http.Redirect(w, r, "/", 302)
 }
 
+//Hash password and add the username, email and hashed password in the database.
 func addUser(db *sql.DB, username string, email string, password string) {
 	hashedPassword, _ := helper.HashPassword(password)
 	tx, _ := db.Begin()

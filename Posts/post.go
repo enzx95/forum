@@ -11,6 +11,8 @@ import (
 	"text/template"
 )
 
+//Execute template and parse title/content/categories entered by the user. Returns an error if any is empty.
+//If not, add the post into the database and redirects to the main page.
 func CreatePost(w http.ResponseWriter, r *http.Request, s *authentification.Session) {
 	if s.Username == "" {
 		http.Redirect(w, r, "/", 302)
@@ -64,6 +66,7 @@ func CreatePost(w http.ResponseWriter, r *http.Request, s *authentification.Sess
 	}
 }
 
+//Get the currnet time and add the title, content, author and categories in the database.
 func addPost(db *sql.DB, author string, content string, title string, categories string) {
 	created := helper.GetNowTime()
 	tx, _ := db.Begin()
@@ -73,6 +76,7 @@ func addPost(db *sql.DB, author string, content string, title string, categories
 	tx.Commit()
 }
 
+//Get the posts rows from the Db and put them in a posts array.
 func GetPosts() []Post {
 	posts := []Post{}
 	rows := database.SelectAllFromTables(database.DB, "posts")
@@ -100,6 +104,7 @@ func GetPosts() []Post {
 	return posts
 }
 
+//Get the posts where current user is the author.
 func GetPosted(Posts []Post, username string) []Post {
 	posted := []Post{}
 
@@ -113,6 +118,7 @@ func GetPosted(Posts []Post, username string) []Post {
 	return posted
 }
 
+//Get posts of a particular categories.
 func GetByCat(Posts []Post, categorie string) []Post {
 	filtered := []Post{}
 

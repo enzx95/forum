@@ -12,6 +12,7 @@ import (
 	"text/template"
 )
 
+//Get the currnet time and add the reply,  author and the post ID in the database.
 func addReply(db *sql.DB, author string, content string, id int) {
 	created := helper.GetNowTime()
 	tx, _ := db.Begin()
@@ -21,6 +22,8 @@ func addReply(db *sql.DB, author string, content string, id int) {
 	tx.Commit()
 }
 
+//Execute template and parse the reply entered by the user. Returns an error if empty.
+//If not, add the reply into the database and redirects to the main page.
 func CreateReply(w http.ResponseWriter, r *http.Request, s *authentification.Session) {
 
 	if s.Username == "" {
@@ -87,6 +90,7 @@ func CreateReply(w http.ResponseWriter, r *http.Request, s *authentification.Ses
 	}
 }
 
+//Get reply rows from the DB and put them in a reply array.
 func GetReplies() []Reply {
 	replies := []Reply{}
 	rows := database.SelectAllFromTables(database.DB, "replies")

@@ -11,6 +11,8 @@ import (
 	"net/http"
 )
 
+//Parse the post ID and checks if the user has already disliked this post. If he has, the dislike is removed. If not, his dislike is added to the DB.
+//Checks if the user has already liked this post. If he has, the like is removed and a dislike is added.
 func AddDislike(w http.ResponseWriter, r *http.Request, s *authentification.Session) {
 	id := r.URL.Path[len("/dislike/"):]
 	url := fmt.Sprintf("/post/%v", id)
@@ -67,6 +69,7 @@ func AddDislike(w http.ResponseWriter, r *http.Request, s *authentification.Sess
 	}
 }
 
+//Get the number of likes for each post.
 func NumberLikes(Likes []Likes, Posts []post.Post) ([]post.Post, []Likes) {
 	for i, p := range Posts {
 		numlikes := 0
@@ -80,6 +83,7 @@ func NumberLikes(Likes []Likes, Posts []post.Post) ([]post.Post, []Likes) {
 	return Posts, Likes
 }
 
+//Get the number of dislikes for each post.
 func NumberDislikes(Dislikes []Dislikes, Posts []post.Post) ([]post.Post, []Dislikes) {
 	for i, p := range Posts {
 		numlikes := 0
@@ -93,6 +97,7 @@ func NumberDislikes(Dislikes []Dislikes, Posts []post.Post) ([]post.Post, []Disl
 	return Posts, Dislikes
 }
 
+//Get the like rows from the DB and put them in a Likes array.
 func GetLikes() []Likes {
 	likes := []Likes{}
 	rows := database.SelectAllFromTables(database.DB, "likes")
@@ -111,6 +116,8 @@ func GetLikes() []Likes {
 	rows.Close()
 	return likes
 }
+
+//Get the dislike rows from the DB and put them in a Likes array.
 func GetDislikes() []Dislikes {
 	dislikes := []Dislikes{}
 	rows := database.SelectAllFromTables(database.DB, "dislikes")
@@ -130,6 +137,7 @@ func GetDislikes() []Dislikes {
 	return dislikes
 }
 
+//Get posts the current user has liked.
 func GetLiked(Likes []Likes, Posts []post.Post, username string) []post.Post {
 	Liked := []post.Post{}
 
@@ -148,6 +156,8 @@ func GetLiked(Likes []Likes, Posts []post.Post, username string) []post.Post {
 	return Liked
 }
 
+//Parse the post ID and checks if the user has already liked this post. If he has, the like is removed. If not, his like is added to the DB.
+//Checks if the user has already disliked this post. If he has, the dislike is removed and a like is added.
 func AddLike(w http.ResponseWriter, r *http.Request, s *authentification.Session) {
 	id := r.URL.Path[len("/like/"):]
 	url := fmt.Sprintf("/post/%v", id)
@@ -204,6 +214,7 @@ func AddLike(w http.ResponseWriter, r *http.Request, s *authentification.Session
 	}
 }
 
+//Works the same as AddLike
 func LikeReply(w http.ResponseWriter, r *http.Request, s *authentification.Session) {
 
 	id := r.URL.Path[len("/replylike/") : len(r.URL.String())-2]
@@ -265,6 +276,7 @@ func LikeReply(w http.ResponseWriter, r *http.Request, s *authentification.Sessi
 	}
 }
 
+//Works the same as AddDislike
 func DislikeReply(w http.ResponseWriter, r *http.Request, s *authentification.Session) {
 	id := r.URL.Path[len("/replydislike/") : len(r.URL.String())-2]
 	secondId := r.URL.Path[len("/replydislike/0/"):]
@@ -322,6 +334,7 @@ func DislikeReply(w http.ResponseWriter, r *http.Request, s *authentification.Se
 	}
 }
 
+//Works the same as GetLikes
 func GetReplyLikes() []Likes {
 	likes := []Likes{}
 	rows := database.SelectAllFromTables(database.DB, "replylikes")
@@ -340,6 +353,8 @@ func GetReplyLikes() []Likes {
 	rows.Close()
 	return likes
 }
+
+//Works the same as GetDislikes
 func GetReplyDislikes() []Dislikes {
 	dislikes := []Dislikes{}
 	rows := database.SelectAllFromTables(database.DB, "replydislikes")
@@ -359,6 +374,7 @@ func GetReplyDislikes() []Dislikes {
 	return dislikes
 }
 
+//Works the same as NumberLikes
 func NumberReplyLikes(Likes []Likes, Replies []reply.Reply) ([]reply.Reply, []Likes) {
 	for i, p := range Replies {
 		numlikes := 0
@@ -374,6 +390,7 @@ func NumberReplyLikes(Likes []Likes, Replies []reply.Reply) ([]reply.Reply, []Li
 	return Replies, Likes
 }
 
+//Works the same as NumberDislikes
 func NumberReplyDislikes(Dislikes []Dislikes, Replies []reply.Reply) ([]reply.Reply, []Dislikes) {
 	for i, p := range Replies {
 		numlikes := 0

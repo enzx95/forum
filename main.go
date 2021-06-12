@@ -16,6 +16,7 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
+//Data sent to the templates
 type Data struct {
 	Buttons       Buttons
 	Posts         []post.Post
@@ -33,6 +34,9 @@ type Buttons struct {
 	Auth string
 }
 
+//Gather data from the database and display the list of posts.
+//Allow users to register and login if they're not, and to logout.
+//Execute template with the gathered data.
 func mainPageHandler(w http.ResponseWriter, r *http.Request, s *authentification.Session) {
 	t, err := template.New("index").Funcs(template.FuncMap{"join": helper.Join, "add": helper.Add}).ParseFiles("index.html", "./assets/pages/posts.html")
 	data := new(Data)
@@ -62,9 +66,12 @@ func mainPageHandler(w http.ResponseWriter, r *http.Request, s *authentification
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
+
+//Gather data from the database for that particular post and display it with all the replies.
+//Allow signed users to create a reply and like comments.
+//Execute template with the gathered data.
 func PostPageHandler(w http.ResponseWriter, r *http.Request, s *authentification.Session) {
 	t, err := template.New("postview").Funcs(template.FuncMap{"join": helper.Join, "add": helper.Add}).ParseFiles("./assets/pages/postview.html", "./assets/pages/navbar.html")
-	//t, err := template.ParseFiles("./assets/pages/postview.html")
 	data := new(Data)
 
 	if r.Method != "GET" {
@@ -130,12 +137,11 @@ func PostPageHandler(w http.ResponseWriter, r *http.Request, s *authentification
 	data.Replies, data.Replylikes = interaction.NumberReplyLikes(data.Replylikes, data.Replies)
 	data.Replies, data.ReplyDislikes = interaction.NumberReplyDislikes(data.ReplyDislikes, data.Replies)
 
-	// data.Liked = getLiked(data.Likes, data.Posts, s.Username)
-	// data.Posted = getPosted(data.Posts, s.Username)
-
 	t.ExecuteTemplate(w, "postview", data)
 }
 
+//Gather data from the database and allow users to filter posts by their categories.
+//Execute template with the gathered data.
 func Filter(w http.ResponseWriter, r *http.Request, s *authentification.Session) {
 	t, err := template.New("index").Funcs(template.FuncMap{"join": helper.Join, "add": helper.Add}).ParseFiles("index.html", "./assets/pages/posts.html")
 	data := new(Data)
@@ -195,6 +201,7 @@ func Filter(w http.ResponseWriter, r *http.Request, s *authentification.Session)
 	}
 }
 
+//Launch the server locally and associate each function with it's path.
 func main() {
 	fs := http.FileServer(http.Dir("assets"))
 	http.Handle("/assets/", http.StripPrefix("/assets/", fs))
