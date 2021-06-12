@@ -54,7 +54,7 @@ func AddDislike(w http.ResponseWriter, r *http.Request, s *authentification.Sess
 				helper.CheckError(err)
 				tx.Commit()
 				fmt.Println("like removed")
-				//http.Redirect(w, r, url, 302)
+
 			}
 		}
 		tx, _ := database.DB.Begin()
@@ -191,7 +191,7 @@ func AddLike(w http.ResponseWriter, r *http.Request, s *authentification.Session
 				helper.CheckError(err)
 				tx.Commit()
 				fmt.Println("dislike removed")
-				//http.Redirect(w, r, url, 302)
+
 			}
 		}
 		tx, _ := database.DB.Begin()
@@ -208,7 +208,7 @@ func LikeReply(w http.ResponseWriter, r *http.Request, s *authentification.Sessi
 
 	id := r.URL.Path[len("/replylike/") : len(r.URL.String())-2]
 	secondId := r.URL.Path[len("/replylike/0/"):]
-	//fmt.Println(r.URL.String())
+
 	url := fmt.Sprintf("/post/%v", id)
 	fmt.Print(s.Username)
 	if s.Username == "" {
@@ -252,7 +252,7 @@ func LikeReply(w http.ResponseWriter, r *http.Request, s *authentification.Sessi
 				helper.CheckError(err)
 				tx.Commit()
 				fmt.Println("comment dislike removed number", secondId)
-				//http.Redirect(w, r, url, 302)
+
 			}
 		}
 		tx, _ := database.DB.Begin()
@@ -309,7 +309,7 @@ func DislikeReply(w http.ResponseWriter, r *http.Request, s *authentification.Se
 				helper.CheckError(err)
 				tx.Commit()
 				fmt.Println("comment like removed number", secondId)
-				//http.Redirect(w, r, url, 302)
+
 			}
 		}
 		tx, _ := database.DB.Begin()

@@ -27,8 +27,7 @@ func CreatePost(w http.ResponseWriter, r *http.Request, s *authentification.Sess
 		r.ParseForm()
 		post.Content = r.FormValue("content")
 		post.Title = r.FormValue("title")
-		//post.Categories = r.Form["categories"]
-		//fmt.Print(r.Form["categories"])
+
 		categories := ""
 		for _, k := range r.Form["categories"] {
 			if categories == "" {
@@ -43,14 +42,14 @@ func CreatePost(w http.ResponseWriter, r *http.Request, s *authentification.Sess
 
 		if post.Content == "" {
 			w.WriteHeader(http.StatusBadRequest)
-			//w.Write([]byte("Email is missing"))
+
 			fmt.Println("Content is missing")
 			data = "Content is missing"
 			t.ExecuteTemplate(w, "create", data)
 			return
 		} else if post.Title == "" {
 			w.WriteHeader(http.StatusBadRequest)
-			//w.Write([]byte("Password is missing"))
+
 			fmt.Println("Title is missing")
 			data = "Title is missing"
 			t.ExecuteTemplate(w, "create", data)
@@ -58,8 +57,7 @@ func CreatePost(w http.ResponseWriter, r *http.Request, s *authentification.Sess
 		}
 
 		addPost(database.DB, post.Author, post.Content, post.Title, categories)
-		// data = "Post sent"
-		// t.ExecuteTemplate(w, "create", data)
+
 		fmt.Println("posted")
 		http.Redirect(w, r, "/", 302)
 		return
@@ -98,7 +96,7 @@ func GetPosts() []Post {
 		posts = append(posts, post)
 	}
 	rows.Close()
-	//fmt.Println(posts)
+
 	return posts
 }
 

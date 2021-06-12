@@ -56,9 +56,6 @@ func mainPageHandler(w http.ResponseWriter, r *http.Request, s *authentification
 	data.Posts, data.Likes = interaction.NumberLikes(data.Likes, data.Posts)
 	data.Posts, data.Dislikes = interaction.NumberDislikes(data.Dislikes, data.Posts)
 
-	// data.Liked = interaction.GetLiked(data.Likes, data.Posts, s.Username)
-	// data.Posted = post.GetPosted(data.Posts, s.Username)
-
 	t.ExecuteTemplate(w, "index", data)
 
 	if err != nil {
