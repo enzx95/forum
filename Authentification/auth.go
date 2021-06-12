@@ -74,7 +74,7 @@ func Signup(w http.ResponseWriter, r *http.Request, s *Session) {
 				//w.Write([]byte("Username already taken"))
 				fmt.Println("Username already taken")
 				data = "Username already taken"
-				t.ExecuteTemplate(w, "register", data)
+				t.ExecuteTemplate(w, "login2", data)
 				return
 			}
 			// If the error is of any other type, send a 500 status
@@ -89,7 +89,7 @@ func Signup(w http.ResponseWriter, r *http.Request, s *Session) {
 				//w.Write([]byte("Email already taken"))
 				fmt.Println("Email already taken")
 				data = "Email already taken"
-				t.ExecuteTemplate(w, "register", data)
+				t.ExecuteTemplate(w, "login2", data)
 				return
 			}
 			// If the error is of any other type, send a 500 status

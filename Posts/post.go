@@ -125,7 +125,5 @@ func GetByCat(Posts []Post, categorie string) []Post {
 			}
 		}
 	}
-
-	fmt.Println("Filtered: ", filtered)
 	return filtered
 }
