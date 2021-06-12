@@ -56,10 +56,8 @@ func mainPageHandler(w http.ResponseWriter, r *http.Request, s *authentification
 	data.Posts, data.Likes = interaction.NumberLikes(data.Likes, data.Posts)
 	data.Posts, data.Dislikes = interaction.NumberDislikes(data.Dislikes, data.Posts)
 
-	data.Liked = interaction.GetLiked(data.Likes, data.Posts, s.Username)
-	data.Posted = post.GetPosted(data.Posts, s.Username)
-
-	//filtered := post.GetByCat(data.Posts, "CSS")
+	// data.Liked = interaction.GetLiked(data.Likes, data.Posts, s.Username)
+	// data.Posted = post.GetPosted(data.Posts, s.Username)
 
 	t.ExecuteTemplate(w, "index", data)
 
@@ -104,7 +102,6 @@ func PostPageHandler(w http.ResponseWriter, r *http.Request, s *authentification
 		Created:    created,
 		Categories: tags,
 	}
-	//fmt.Println(currentPost)
 	posts = append(posts, currentPost)
 	if err != nil {
 
@@ -113,13 +110,6 @@ func PostPageHandler(w http.ResponseWriter, r *http.Request, s *authentification
 			return
 		}
 	}
-
-	// if AlreadyLoggedIn(r) {
-	// 	data.Buttons.Auth = `<li><a href="/signout">Sign out</a></li>`
-	// } else {
-	// 	data.Buttons.Auth = `<li><a href="/signin">Sign in</a></li>
-	// 	<li><a href="/signup">Sign up</a></li>`
-	// }
 
 	data.Posts = posts
 	data.Likes = interaction.GetLikes()
@@ -149,6 +139,65 @@ func PostPageHandler(w http.ResponseWriter, r *http.Request, s *authentification
 	t.ExecuteTemplate(w, "postview", data)
 }
 
+func Filter(w http.ResponseWriter, r *http.Request, s *authentification.Session) {
+	t, err := template.New("index").Funcs(template.FuncMap{"join": helper.Join, "add": helper.Add}).ParseFiles("index.html", "./assets/pages/posts.html")
+	data := new(Data)
+
+	if r.Method == "GET" {
+		helper.ErrorHandler(w, r, http.StatusNotFound)
+		return
+	} else {
+		if authentification.AlreadyLoggedIn(r) {
+			data.Buttons.Auth = `<li><a href="/signout">Sign out</a></li>`
+		} else {
+			data.Buttons.Auth = `<li><a href="/signin">Sign in</a></li>
+			<li><a href="/signup">Sign up</a></li>`
+		}
+		data.Posts = post.GetPosts()
+		data.Likes = interaction.GetLikes()
+		data.Dislikes = interaction.GetDislikes()
+
+		data.Posts, data.Likes = interaction.NumberLikes(data.Likes, data.Posts)
+		data.Posts, data.Dislikes = interaction.NumberDislikes(data.Dislikes, data.Posts)
+
+		data.Liked = interaction.GetLiked(data.Likes, data.Posts, s.Username)
+		data.Posted = post.GetPosted(data.Posts, s.Username)
+
+		cat := r.URL.Path[len("/filter/"):]
+		if cat == "" {
+			helper.ErrorHandler(w, r, http.StatusNotFound)
+			return
+		}
+
+		if cat == "posted" {
+			if s.Username == "" {
+				http.Redirect(w, r, "/", 302)
+			} else {
+				data.Posts = data.Posted
+				t.ExecuteTemplate(w, "index", data)
+				return
+			}
+		} else if cat == "liked" {
+			if s.Username == "" {
+				http.Redirect(w, r, "/", 302)
+			} else {
+				data.Posts = data.Liked
+				t.ExecuteTemplate(w, "index", data)
+				return
+			}
+		}
+
+		filtered := post.GetByCat(data.Posts, cat)
+		data.Posts = filtered
+
+		t.ExecuteTemplate(w, "index", data)
+
+		if err != nil {
+
+		}
+	}
+}
+
 func main() {
 	fs := http.FileServer(http.Dir("assets"))
 	http.Handle("/assets/", http.StripPrefix("/assets/", fs))
@@ -165,5 +214,6 @@ func main() {
 	http.HandleFunc("/reply/", authentification.Middleware(reply.CreateReply))
 	http.HandleFunc("/replylike/", authentification.Middleware(interaction.LikeReply))
 	http.HandleFunc("/replydislike/", authentification.Middleware(interaction.DislikeReply))
+	http.HandleFunc("/filter/", authentification.Middleware(Filter))
 	http.ListenAndServe(":8080", nil)
 }

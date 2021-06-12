@@ -1,11 +1,13 @@
 {{define "index"}}
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <title>PROJET-FORUM</title>
     <link rel="stylesheet" href="/assets/css/style.css">
 </head>
+
 <body>
     <div class="navbar">
         <img class="logo" src="/assets/img/LOGO_YNOV.png">
@@ -26,14 +28,52 @@
     </div>
 
     <div class="post">
-        <a class="create_post" href="/create"><h3>Star a Discussion</h3></a>
-            <ul class="links2">
-                <li><a href="#"></a>All Discussions</li>
-                <li><a href="#"></a>Tags</li>
-                <li><a href="#"></a>tags1</li>
-                <li><a href="#"></a>tags2</li>
-                <li><a href="#"></a>tags3</li>
-            </ul>
+        <a class="create_post" href="/create">
+           <h3 href="/create">Star a Discussion</h3></a>
+        </a>
+        <ul class="links2">
+            <li>
+                <form action="/" method="get">
+                    <button name="all" value="all">All posts</button>
+                </form>
+            </li>
+            <li>
+                <form action="/filter/posted" method="post">
+                    <button name="posted" value="posted">My posts</button>
+                </form>
+            </li>
+            <li>
+                <form action="/filter/liked" method="post">
+                    <button name="liked" value="liked">Liked Posts</button>
+                </form>
+            </li>
+            <li>
+                <form action="/filter/JavaScript" method="post">
+                    <button name="Js" value="JavaScript">JavaScript</button>
+                </form>
+            </li>
+            <li>
+                <form action="/filter/C" method="post">
+                    <button name="C" value="C">C</button>
+                </form>
+            </li>
+            <li>
+                <form action="/filter/CSS" method="post">
+                    <button name="CSS" value="CSS">CSS</button>
+                </form>
+            </li>
+            <li>
+                <form action="/filter/HTML" method="post">
+                    <button name="HTML" value="HTML">HTML</button>
+                </form>
+            </li>
+            <li>
+                <form action="/filter/C++" method="post">
+                    <button name="C++" value="C++">C++</button>
+                </form>
+            </li>
+            
+        </ul>
     </div>
 
     <div class="discussion">
@@ -44,7 +84,7 @@
 
 
 </body>
+
 </html>
 
 {{end}}
-
