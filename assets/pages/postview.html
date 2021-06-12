@@ -30,15 +30,22 @@
     </form><br>
 
     {{range .Replies}}
+    <br>
     <li>{{.Author}} replied: </li><br>
     {{.Content}}
     <br>
     <p>Likes: {{.Likes}} Dislikes: {{.Dislikes}}</p><br>
+    
+    
+    
+
     <form action="/replylike/{{.PostId}}/{{.Id}}" method="post">
         <input type="submit" name="like" value="Like this comment" class="buttonreplylike" />
     </form>
     <form action="/replydislike/{{.PostId}}/{{.Id}}" method="post">
         <input type="submit" name="dislike" value="Dislike this comment" class="buttonreplydislike" />
+       
+        <hr size ="3" color = "black" />
     </form>
 
     {{end}}
