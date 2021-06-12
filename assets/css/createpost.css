@@ -4,8 +4,58 @@
     font-size: 20px;
 }
 
-.titre {
- 
-    text-align: center;
-    margin-top: 170px;
-}
+
+a.stylebouton {
+
+    -webkit-border-radius: 1px;
+  
+    -moz-border-radius: 1px;
+  
+    border-radius: 1px;
+  
+    border: solid thin #929292;
+  
+    text-shadow: none;
+  
+    background: #F6F6F6;
+  
+    background-image: -webkit-linear-gradient(top, #F6F6F6, #DDDDDD);
+  
+    background-image: -moz-linear-gradient(top, #F6F6F6, #DDDDDD);
+  
+    background-image: -ms-linear-gradient(top, #F6F6F6, #DDDDDD);
+  
+    background-image: -o-linear-gradient(top, #F6F6F6, #DDDDDD);
+  
+    background-image: linear-gradient(to bottom, #F6F6F6, #DDDDDD);    
+  
+    color: buttontext;
+  
+    padding: 3px 8px;
+  
+    margin: 2px;
+  
+    text-decoration: none;
+  
+    font-family: Arial;
+  
+    font-size: 13.1999998092651px;
+  
+  }
+  
+  a.stylebouton:hover {
+  
+    background-image: -webkit-linear-gradient(top, #DDDDDD, #F6F6F6);
+  
+    background-image: -moz-linear-gradient(top, #DDDDDD, #F6F6F6);
+  
+    background-image: -ms-linear-gradient(top, #DDDDDD, #F6F6F6);
+  
+    background-image: -o-linear-gradient(top, #DDDDDD, #F6F6F6, #DDDDDD);
+  
+    background-image: linear-gradient(to bottom, #DDDDDD, #F6F6F6);    
+  
+  }
+
+  
+  
