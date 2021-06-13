@@ -14,11 +14,12 @@
 	<body>
 		<img class="logo" src="/assets/img/LOGO_YNOV.png">
 
+		<h1  align="center" >Ecrivez votre commentaire pour ce post ! </h1>
 
 	<div class="createreply">
 		
 		<form action="/reply/{{.}}" method="post">
-			Content: <input type="text" size="50" style="height: 40px;" name="content" >
+			Sujet: <input type="text" size="50" style="height: 40px;" name="content" >
 		
 
 			<input type="submit" value="reply" size="10" style="height:20px;" >
@@ -26,7 +27,7 @@
 			<a class="stylebouton" href="/post/1">Retour</a>
 
 		</form>
-		{{.}}
+		
 	
 </div>
 	</body>

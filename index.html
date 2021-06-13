@@ -11,7 +11,7 @@
 <body>
     <div class="navbar">
         <a class="#" href="/"><img class="logo" src="/assets/img/LOGO_YNOV.png"></a>
-        
+
         <a class="buttonlogin">{{.Buttons.Auth}}</a>
     </div>
 
@@ -21,50 +21,53 @@
 
     <div class="post">
         <a class="create_post" href="/create">
-           <h3 href="/create">Start a Discussion</h3></a>
+            <span href="/create">Start a Discussion</span>
+        </a>
         </a>
         <ul class="links2">
-            <li>
-                <form action="/" method="get">
-                    <button name="all" value="all">All posts</button>
-                </form>
-            </li>
-            <li>
-                <form action="/filter/posted" method="post">
-                    <button name="posted" value="posted">My posts</button>
-                </form>
-            </li>
-            <li>
-                <form action="/filter/liked" method="post">
-                    <button name="liked" value="liked">Liked Posts</button>
-                </form>
-            </li>
-            <li>
-                <form action="/filter/JavaScript" method="post">
-                    <button name="Js" value="JavaScript">JavaScript</button>
-                </form>
-            </li>
-            <li>
-                <form action="/filter/C" method="post">
-                    <button name="C" value="C">C</button>
-                </form>
-            </li>
-            <li>
-                <form action="/filter/CSS" method="post">
-                    <button name="CSS" value="CSS">CSS</button>
-                </form>
-            </li>
-            <li>
-                <form action="/filter/HTML" method="post">
-                    <button name="HTML" value="HTML">HTML</button>
-                </form>
-            </li>
-            <li>
-                <form action="/filter/C++" method="post">
-                    <button name="C++" value="C++">C++</button>
-                </form>
-            </li>
-            
+            <div class="gauche">
+                <li>
+                    <form action="/" method="get">
+                        <button name="all" value="all">All posts</button>
+                    </form>
+                </li>
+                <li>
+                    <form action="/filter/posted" method="post">
+                        <button name="posted" value="posted">My posts</button>
+                    </form>
+                </li>
+                <li>
+                    <form action="/filter/liked" method="post">
+                        <button name="liked" value="liked">Liked Posts</button>
+                    </form>
+                </li>
+                <li>
+                    <form action="/filter/JavaScript" method="post">
+                        <button name="Js" value="JavaScript">JavaScript</button>
+                    </form>
+                </li>
+                <li>
+                    <form action="/filter/C" method="post">
+                        <button name="C" value="C">C</button>
+                    </form>
+                </li>
+                <li>
+                    <form action="/filter/CSS" method="post">
+                        <button name="CSS" value="CSS">CSS</button>
+                    </form>
+                </li>
+                <li>
+                    <form action="/filter/HTML" method="post">
+                        <button name="HTML" value="HTML">HTML</button>
+                    </form>
+                </li>
+                <li>
+                    <form action="/filter/C++" method="post">
+                        <button name="C++" value="C++">C++</button>
+                    </form>
+                </li>
+            </div>
+
         </ul>
     </div>
 

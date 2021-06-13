@@ -7,7 +7,7 @@
 }
 
 body {
-    background-color: wheat;
+    background-color: #333333;
     font-family: "Ubuntu", sans-serif;
 
 }
@@ -15,7 +15,7 @@ body {
 li, a, button {
     font-weight: 500;
     font-size: 16px;
-    color: white;
+  color: black;
     text-decoration: none;
 }
 
@@ -56,6 +56,7 @@ button {
 
 .links2 li {
     margin-top: 5%;
+    color:#333333;
 }
 
 .create_post {
@@ -97,4 +98,14 @@ button {
     float: right;
     width: 75%;
     margin: 0;
+    color: white;
+}
+
+
+
+h3{
+    color: black;
+}
+.buttonlogin{
+    color: blanchedalmond;
 }
