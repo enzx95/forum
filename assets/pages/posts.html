@@ -1,12 +1,24 @@
 {{define "posts"}}
 
-<html>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Post</title>
+    <link rel="stylesheet" href="/assets/css/style.css">
+    <link rel="stylesheet" href="/assets/css/postview.css">
+</head>
+
 	<head>
 	<title></title>
 	</head>
 	<body>
+		
+
 	
 		{{range .Posts}}
+		
 		<a href="/post/{{.Id}}" >
         <h3>{{.Title}}</h3>
 		</a><br>
@@ -14,7 +26,7 @@
 		{{.Categories}}
 		Posted by {{.Author}}<br>
 		<p>Likes: {{.Likes}} Dislikes: {{.Dislikes}}</p><br>
-		<hr size ="6" color = "black" />
+		
         {{end}}
 		
 	</body>

@@ -1,4 +1,4 @@
-{{define "postview"}}
+.{{define "postview"}}
 <!DOCTYPE html>
 <html lang="en">
 
@@ -7,6 +7,8 @@
     <title>Likes and Dislikes</title>
     <link rel="stylesheet" href="/assets/css/style.css">
     <link rel="stylesheet" href="/assets/css/postview.css">
+    <link rel="stylesheet" href="/assets/css/forum.css">
+
 </head>
 
 <body>
@@ -16,8 +18,10 @@
     <h3>{{.Current.Title}}</h3>
     <br>
     {{.Current.Content}}<br>
+
     Posted by {{.Current.Author}}<br>
     <p>Likes: {{.Current.Likes}} Dislikes: {{.Current.Dislikes}}</p><br>
+   
     <form action="/like/{{.Current.Id}}" method="post">
         <input type="submit" name="like" value="Like" class="buttonlike" />
     </form>
@@ -26,26 +30,55 @@
     </form><br>
 
     <form action="/reply/{{.Current.Id}}">
-        <input type="submit" value="reply" class="button reply" />
-    </form><br>
+        <input type="submit" value="reply" class="buttondislike" />
+    </form><br> 
 
     {{range .Replies}}
     <br>
+    <input id="image" type="image" width="30" height="30" alt="Author"
+        src="https://i2.wp.com/socialmediastart.nl/wp-content/uploads/2014/12/user-icon-png-person-user-profile-icon-20.png">
+    </input>
+
+
+    
     <li>{{.Author}} replied: </li><br>
     {{.Content}}
     <br>
     <p>Likes: {{.Likes}} Dislikes: {{.Dislikes}}</p><br>
-    
-    
-    
+
+
+
 
     <form action="/replylike/{{.PostId}}/{{.Id}}" method="post">
         <input type="submit" name="like" value="Like this comment" class="buttonreplylike" />
     </form>
     <form action="/replydislike/{{.PostId}}/{{.Id}}" method="post">
         <input type="submit" name="dislike" value="Dislike this comment" class="buttonreplydislike" />
-       
-        <hr size ="3" color = "black" />
+
+        <hr size="3" color="black" />
+        <div class="container-fluid mt-100">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <div class="media flex-wrap w-100 align-items-center"> 
+                                <div class="media-body ml-3"> 
+                                    <div class="text-muted small"></div>
+                                </div>
+                                <div class="text-muted small ml-3">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                        </div>
+                        <div class="card-footer d-flex flex-wrap justify-content-between align-items-center px-0 pt-0 pb-3">
+                            <div class="px-4 pt-3"> <a href="javascript:void(0)" class="text-muted d-inline-flex align-items-center align-middle" data-abc="true"> <i class="fa fa-heart text-danger"></i>&nbsp; <span class="align-middle">445</span> </a> <span class="text-muted d-inline-flex align-items-center align-middle ml-4"> <i class="fa fa-eye text-muted fsize-3"></i>&nbsp; <span class="align-middle">14532</span> </span> </div>
+                            <div class="px-4 pt-3"> <button type="button" class="btn btn-primary"><i class="ion ion-md-create"></i>&nbsp; Reply</button> </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </form>
 
     {{end}}
