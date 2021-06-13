@@ -11,7 +11,7 @@ Different ways :
 
 - Use "Dockers"
     + In Dockers pull `docker pull enzx95/forum`
-    + `run -it --rm -p 8080:8080 forum`
+    + `docker run -d -p 8080:8080 enzx95/forum`
     + go on http://localhost:8080/
 
 
