@@ -47,10 +47,10 @@ func mainPageHandler(w http.ResponseWriter, r *http.Request, s *authentification
 	}
 
 	if authentification.AlreadyLoggedIn(r) {
-		data.Buttons.Auth = `<li><a href="/signout">Sign out</a></li>`
+		data.Buttons.Auth = `<a href="/signout">Sign out</a>`
 	} else {
-		data.Buttons.Auth = `<li><a href="/signin">Sign in</a></li>
-		<li><a href="/signup">Sign up</a></li>`
+		data.Buttons.Auth = `<a href="/signin">Sign in    </a>
+		<a href="/signup">Sign up</a>`
 	}
 
 	data.Posts = post.GetPosts()
@@ -151,10 +151,10 @@ func Filter(w http.ResponseWriter, r *http.Request, s *authentification.Session)
 		return
 	} else {
 		if authentification.AlreadyLoggedIn(r) {
-			data.Buttons.Auth = `<li><a href="/signout">Sign out</a></li>`
+			data.Buttons.Auth = `<a href="/signout">Sign out</a>`
 		} else {
-			data.Buttons.Auth = `<li><a href="/signin">Sign in</a></li>
-			<li><a href="/signup">Sign up</a></li>`
+			data.Buttons.Auth = `<a href="/signin">Sign in    </a>
+			<a href="/signup">Sign up</a>`
 		}
 		data.Posts = post.GetPosts()
 		data.Likes = interaction.GetLikes()
